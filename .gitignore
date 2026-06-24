@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+venv/
+.venv/
+env/
+
+# Flask / App
+instance/
+.env
+.env.*
+!.env.example
+*.log
+uploads/
+logs/
+
+# Testing
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+*.xml
+bandit-report.json
+
+# Docker
+*.env.local
+
+# IDE
+.vscode/
+.idea/
+.claude/
+*.swp
+*.swo
+.DS_Store
+
+# Flutter admin app (separate project — built & deployed independently)
+portfolio_admin/
+
+# JVM / crash logs
+hs_err_pid*.log
