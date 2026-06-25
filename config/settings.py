@@ -19,6 +19,13 @@ class BaseConfig:
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
     JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
 
+    # ── HTTPS / cookies ───────────────────────────────────────
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    # PREFERRED_URL_SCHEME=https and SESSION_COOKIE_SECURE are enabled in
+    # staging/production only (behind Nginx), so local http dev keeps working.
+    SESSION_COOKIE_SECURE = False
+
     # ── Database ──────────────────────────────────────────────
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = {
@@ -96,12 +103,16 @@ class StagingConfig(BaseConfig):
     TESTING = False
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
     CORS_ORIGINS = os.getenv('CORS_ORIGINS', 'https://staging.hibbo.tech').split(',')
+    SESSION_COOKIE_SECURE = True
+    PREFERRED_URL_SCHEME = 'https'
 
 
 class ProductionConfig(BaseConfig):
     DEBUG = False
     TESTING = False
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
+    SESSION_COOKIE_SECURE = True
+    PREFERRED_URL_SCHEME = 'https'
 
     # Force strong secrets in production
     @classmethod
