@@ -76,22 +76,19 @@ if [ ! -f .env ]; then
   read -rp "Press Enter after editing .env, or Ctrl+C to abort..."
 fi
 
-# ── SSL ───────────────────────────────────────────────────────
-# Bootstrap Let's Encrypt: seeds a dummy cert so nginx can start, brings nginx
-# up to answer the ACME HTTP-01 challenge, then swaps in the real certificate.
-# Uses the same named volumes (certbot_conf / certbot_www) that nginx reads from.
-echo "› Setting up SSL certificates..."
-DOMAIN="$DOMAIN" EMAIL="admin@$DOMAIN" bash scripts/init-letsencrypt.sh
+# ── Build & start services ────────────────────────────────────
+# The stack self-bootstraps: nginx mints a temporary self-signed cert so it can
+# start, the certbot service then obtains the real Let's Encrypt cert and nginx
+# reloads automatically; the app container runs `db-init` on startup. So a plain
+# build + up brings everything online.
+echo "› Building images and starting all services..."
+docker compose up -d --build
+echo "› Waiting for services to settle (TLS issuance can take ~30-60s)..."
+sleep 45
 
-# ── Start services ────────────────────────────────────────────
-echo "› Starting all Docker services (app, celery, db, redis, certbot)..."
-docker compose up -d
-echo "› Waiting for services to be ready..."
-sleep 15
-
-# ── DB init ───────────────────────────────────────────────────
-echo "› Initializing database..."
-docker exec portfolio_app python manage.py db-init
+# ── Admin user ────────────────────────────────────────────────
+# DB tables are created automatically by the app container; only the admin
+# account needs an interactive step (password is never stored in code/env).
 echo "› Creating admin user..."
 docker exec -it portfolio_app python manage.py create-admin
 
