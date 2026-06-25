@@ -455,6 +455,24 @@ function setLang(lang) {
   setTimeout(initSkillBars, 400);
 }
 
+// Switch language AND reflect it in the URL path (/ar ↔ /en),
+// preserving the rest of the path, query and hash.
+function switchLang(lang) {
+  if (lang !== 'ar' && lang !== 'en') return;
+  const rest = window.location.pathname.replace(/^\/(ar|en)(?=\/|$)/, '');
+  const url = '/' + lang + rest + window.location.search + window.location.hash;
+  if (lang !== currentLang) {
+    history.pushState({ lang }, '', url);
+  }
+  setLang(lang);
+}
+
+// Re-apply language when navigating browser history.
+window.addEventListener('popstate', () => {
+  const m = window.location.pathname.match(/^\/(ar|en)(?=\/|$)/);
+  setLang(m ? m[1] : 'ar');
+});
+
 // ─── Helpers ──────────────────────────────────────────────────
 function setText(id, value, html = false) {
   const el = document.getElementById(id);
@@ -522,5 +540,6 @@ window.addEventListener('scroll', () => {
 
 // ─── Init ─────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  setLang('ar');
+  // Initialize from the language the server rendered into <html lang="…">.
+  setLang(document.documentElement.lang === 'en' ? 'en' : 'ar');
 });

@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="{{ lang }}" dir="{{ 'rtl' if lang == 'ar' else 'ltr' }}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,6 +9,12 @@
 <meta property="og:description" content="Building smart digital solutions with AI — Flutter, Python, Flask, REST APIs">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
+
+<!-- Language alternates (SEO) -->
+<link rel="alternate" hreflang="ar" href="{{ site_url }}/ar">
+<link rel="alternate" hreflang="en" href="{{ site_url }}/en">
+<link rel="alternate" hreflang="x-default" href="{{ site_url }}/ar">
+
 <title>أبوبكر هبل الدين — مهندس برمجيات وخبير حلول ذكاء اصطناعي</title>
 
 <!-- Fonts -->
@@ -450,8 +456,8 @@ body.rtl .annot.a3{left:-1.6rem}
 
 <!-- Language Toggle -->
 <div class="lang-toggle">
-  <button class="lang-btn" id="btnEn" onclick="setLang('en')" aria-pressed="false" aria-label="English">EN</button>
-  <button class="lang-btn active" id="btnAr" onclick="setLang('ar')" aria-pressed="true" aria-label="العربية">ع</button>
+  <button class="lang-btn" id="btnEn" onclick="switchLang('en')" aria-pressed="false" aria-label="English">EN</button>
+  <button class="lang-btn active" id="btnAr" onclick="switchLang('ar')" aria-pressed="true" aria-label="العربية">ع</button>
 </div>
 
 <!-- NAV -->
