@@ -16,7 +16,16 @@ echo "════════════════════════�
 # ── System packages ────────────────────────────────────────────
 echo "› Installing system packages..."
 apt-get update -y
-apt-get install -y curl git ufw fail2ban docker.io docker-compose-plugin
+apt-get install -y curl git ufw fail2ban
+
+# ── Docker (official installer — bundles the compose plugin) ────
+# Ubuntu's docker-compose-plugin isn't always in the default repos, so use
+# Docker's convenience script. Idempotent: skipped if docker is already present.
+if ! command -v docker >/dev/null 2>&1; then
+  echo "› Installing Docker Engine + Compose plugin..."
+  curl -fsSL https://get.docker.com | sh
+fi
+docker compose version
 
 # ── Firewall ──────────────────────────────────────────────────
 echo "› Configuring firewall..."
