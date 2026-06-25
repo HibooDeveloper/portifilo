@@ -112,7 +112,7 @@ services:
     # self-signed placeholder, then request the real cert via the HTTP-01
     # challenge. Afterwards loop `certbot renew` every 12h. nginx reloads itself
     # within ~60s of the cert changing (see nginx/entrypoint.sh).
-    entrypoint: /bin/sh -c "sleep 20; if [ ! -f /etc/letsencrypt/renewal/hibbo.tech.conf ]; then rm -rf /etc/letsencrypt/live/hibbo.tech /etc/letsencrypt/archive/hibbo.tech; certbot certonly --webroot -w /var/www/certbot --non-interactive --agree-tos --email admin@hibbo.tech --rsa-key-size 4096 -d hibbo.tech -d www.hibbo.tech || true; fi; trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done"
+    entrypoint: /bin/sh -c "D=hibbo.tech; if [ ! -f /etc/letsencrypt/renewal/$$D.conf ]; then rm -rf /etc/letsencrypt/live/$$D /etc/letsencrypt/archive/$$D; n=0; until [ -f /etc/letsencrypt/renewal/$$D.conf ] || [ $$n -ge 10 ]; do n=$$((n+1)); echo \"[certbot] issuance attempt $$n\"; certbot certonly --webroot -w /var/www/certbot --non-interactive --agree-tos --email admin@$$D --rsa-key-size 4096 -d $$D -d www.$$D || true; [ -f /etc/letsencrypt/renewal/$$D.conf ] || sleep 30; done; fi; trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done"
 
 volumes:
   mysql_data: {}
