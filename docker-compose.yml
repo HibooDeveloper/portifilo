@@ -58,7 +58,9 @@ services:
       - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s; timeout: 5s; retries: 5
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks: [portfolio_net]
     expose: ["3306"]
 
@@ -72,7 +74,9 @@ services:
       - redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 10s; timeout: 3s; retries: 5
+      interval: 10s
+      timeout: 3s
+      retries: 5
     networks: [portfolio_net]
     expose: ["6379"]
 
@@ -81,6 +85,8 @@ services:
     image: nginx:1.27-alpine
     container_name: portfolio_nginx
     restart: always
+    # Reload every 6h so renewed Let's Encrypt certs are picked up without a restart.
+    command: /bin/sh -c "while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g 'daemon off;'"
     ports:
       - "80:80"
       - "443:443"
@@ -108,8 +114,8 @@ volumes:
   redis_data: {}
   uploads:    {}
   logs:       {}
-  certbot_www:{}
-  certbot_conf:{}
+  certbot_www: {}
+  certbot_conf: {}
 
 networks:
   portfolio_net:

@@ -9,7 +9,7 @@ BACKUP_DIR="/opt/backups"
 
 echo "═══════════════════════════════════════"
 echo "  Abubaker Portfolio — VPS Deploy"
-echo "  Domaster: $DOMAIN"
+echo "  Domain: $DOMAIN"
 echo "  Repo:   $REPO_URL"
 echo "═══════════════════════════════════════"
 
@@ -68,20 +68,14 @@ if [ ! -f .env ]; then
 fi
 
 # ── SSL ───────────────────────────────────────────────────────
+# Bootstrap Let's Encrypt: seeds a dummy cert so nginx can start, brings nginx
+# up to answer the ACME HTTP-01 challenge, then swaps in the real certificate.
+# Uses the same named volumes (certbot_conf / certbot_www) that nginx reads from.
 echo "› Setting up SSL certificates..."
-mkdir -p nginx/certbot/www nginx/certbot/conf
-
-# Initial cert request (HTTP challenge)
-docker run --rm \
-  -v "$APP_DIR/nginx/certbot/conf:/etc/letsencrypt" \
-  -v "$APP_DIR/nginx/certbot/www:/var/www/certbot" \
-  certbot/certbot certonly --webroot \
-  --webroot-path=/var/www/certbot \
-  --email "admin@$DOMAIN" --agree-tos --no-eff-email \
-  -d "$DOMAIN" -d "www.$DOMAIN"
+DOMAIN="$DOMAIN" EMAIL="admin@$DOMAIN" bash scripts/init-letsencrypt.sh
 
 # ── Start services ────────────────────────────────────────────
-echo "› Starting Docker services..."
+echo "› Starting all Docker services (app, celery, db, redis, certbot)..."
 docker compose up -d
 echo "› Waiting for services to be ready..."
 sleep 15
