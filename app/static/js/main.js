@@ -308,16 +308,38 @@ function renderSkills(t) {
     </div>`).join('');
 }
 
-function renderServices(t) {
+function svcCard(icon, name, desc, tags, i) {
+  return `
+    <div class="svc-card reveal" style="transition-delay:${i * 0.07}s">
+      <div class="svc-icon">${icon || ''}</div>
+      <div class="svc-name">${name || ''}</div>
+      <div class="svc-desc">${desc || ''}</div>
+      <div class="svc-tags">${(tags || []).map(tag => `<span class="s-tag">${tag}</span>`).join('')}</div>
+    </div>`;
+}
+
+async function renderServices(t) {
   const el = document.getElementById('servicesGrid');
   if (!el) return;
-  el.innerHTML = t.services.map((s, i) => `
-    <div class="svc-card reveal" style="transition-delay:${i * 0.07}s">
-      <div class="svc-icon">${s.icon}</div>
-      <div class="svc-name">${s.name}</div>
-      <div class="svc-desc">${s.desc}</div>
-      <div class="svc-tags">${s.tags.map(tag => `<span class="s-tag">${tag}</span>`).join('')}</div>
-    </div>`).join('');
+  // Render the live list from the admin-managed database. Fall back to the
+  // bundled static list only if the API is unreachable.
+  const lang = currentLang;
+  try {
+    const res = await fetch(`/api/services/?lang=${lang}&per_page=100`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    const items = (data && data.items) || [];
+    // Ignore a stale response if the user switched language mid-fetch.
+    if (currentLang !== lang) return;
+    if (items.length) {
+      el.innerHTML = items.map((s, i) => svcCard(s.icon, s.title, s.description, s.tags, i)).join('');
+      observe();
+      return;
+    }
+  } catch (e) {
+    // Network/API failure — fall through to the static list below.
+  }
+  el.innerHTML = t.services.map((s, i) => svcCard(s.icon, s.name, s.desc, s.tags, i)).join('');
 }
 
 function renderProjects(filter) {
