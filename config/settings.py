@@ -84,6 +84,9 @@ class BaseConfig:
 
 class DevelopmentConfig(BaseConfig):
     DEBUG = True
+    # Reload Jinja templates on every request so HTML edits show without a
+    # server restart (otherwise the compiled template is cached in memory).
+    TEMPLATES_AUTO_RELOAD = True
     # Use DATABASE_URL if set, otherwise SQLite in Flask's instance folder
     _default_db = os.getenv('DATABASE_URL')
     if not _default_db:

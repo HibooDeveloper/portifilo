@@ -50,6 +50,8 @@ const TRANSLATIONS = {
     footerMain: '© 2025 <span>أبوبكر هبل الدين سليمان</span> · مهندس برمجيات وخبير حلول الذكاء الاصطناعي · القاهرة، مصر',
     footerSub: 'Flutter · Python · Flask · AI · التحول الرقمي',
     readMore: 'اقرأ المزيد ←',
+    blogBack: 'العودة إلى المقالات', blogLoading: 'جارٍ تحميل المقال…',
+    blogNotFound: 'لم يتم العثور على هذا المقال.', minRead: 'دقائق قراءة', views: 'مشاهدة',
 
     roles: [
       'مطور Flutter',
@@ -124,9 +126,61 @@ const TRANSLATIONS = {
     ],
 
     blogs: [
-      { emoji: '📱', cat: 'Flutter', title: 'بناء تطبيقات Flutter تعمل بدون إنترنت مع استراتيجية Hive للمزامنة', excerpt: 'كيفية تصميم تطبيقات Flutter تعمل بسلاسة دون اتصال وتتزامن بذكاء عند العودة للإنترنت.', date: '١٠ يونيو ٢٠٢٥', read: '٧ دقائق' },
-      { emoji: '🐍', cat: 'Python', title: 'Flask APIs للإنتاج: أنماط معمارية تتوسع فعلاً', excerpt: 'من مسارات Flask الأساسية إلى REST APIs جاهزة للمؤسسات مع Blueprints ومصادقة JWT.', date: '٢٨ مايو ٢٠٢٥', read: '١٠ دقائق' },
-      { emoji: '🤖', cat: 'AI والأتمتة', title: 'هندسة المطالبات لأتمتة الأعمال: دليل عملي', excerpt: 'تقنيات واقعية لصياغة مطالبات تُشغّل تدفقات أتمتة أعمال موثوقة ومتسقة.', date: '١٥ مايو ٢٠٢٥', read: '٨ دقائق' },
+      { emoji: '📱', cat: 'Flutter', slug: 'offline-first-flutter-hive-sync', title: 'بناء تطبيقات Flutter تعمل بدون إنترنت مع استراتيجية Hive للمزامنة', excerpt: 'كيفية تصميم تطبيقات Flutter تعمل بسلاسة دون اتصال وتتزامن بذكاء عند العودة للإنترنت.', date: '١٠ يونيو ٢٠٢٥', read: '٧ دقائق', tags: ['Flutter', 'Hive', 'Offline'],
+        body: `
+        <p>عند بناء تطبيقات الجوال، غالباً ما يكون الاتصال بالإنترنت غير مضمون. النهج <strong>Offline-First</strong> يجعل التطبيق يعمل بالكامل من قاعدة بيانات محلية، ثم يتزامن مع الخادم في الخلفية عند توفر الشبكة.</p>
+        <h2>لماذا Hive؟</h2>
+        <p>‏Hive قاعدة بيانات NoSQL خفيفة ومكتوبة بلغة Dart الخالصة — سريعة جداً ولا تعتمد على إضافات أصلية، مما يجعلها مثالية لتخزين البيانات محلياً.</p>
+        <ul>
+          <li>قراءة وكتابة فائقة السرعة</li>
+          <li>دعم التشفير المدمج</li>
+          <li>تكامل سلس مع نماذج البيانات عبر <code>TypeAdapters</code></li>
+        </ul>
+        <h2>استراتيجية المزامنة</h2>
+        <p>نخزّن كل تغيير محلياً مع علامة <code>isSynced = false</code>، ثم نرفع التغييرات غير المتزامنة عند عودة الاتصال:</p>
+        <pre><code>final box = await Hive.openBox('tasks');
+await box.put(task.id, task..isSynced = false);
+
+connectivity.onConnectivityChanged.listen((status) {
+  if (status != ConnectivityResult.none) syncPending();
+});</code></pre>
+        <blockquote>القاعدة الذهبية: لا يجب أن ينتظر المستخدم الشبكة أبداً — الواجهة تتفاعل فوراً مع البيانات المحلية.</blockquote>
+        <h2>شرح بالفيديو</h2>
+        <p>https://youtu.be/lHhRhPV--G0</p>
+        <p>بهذا النهج يبقى تطبيقك سريع الاستجابة في كل الظروف، ويمنح المستخدمين تجربة موثوقة حتى في أسوأ ظروف الشبكة.</p>` },
+      { emoji: '🐍', cat: 'Python', slug: 'production-flask-api-architecture', title: 'Flask APIs للإنتاج: أنماط معمارية تتوسع فعلاً', excerpt: 'من مسارات Flask الأساسية إلى REST APIs جاهزة للمؤسسات مع Blueprints ومصادقة JWT.', date: '٢٨ مايو ٢٠٢٥', read: '١٠ دقائق', tags: ['Python', 'Flask', 'API'],
+        body: `
+        <p>الانتقال من نموذج Flask بسيط إلى واجهة API جاهزة للإنتاج يتطلب بنية واضحة. المفتاح هو <strong>مصنع التطبيق (Application Factory)</strong> مع <strong>Blueprints</strong> لتقسيم المسؤوليات.</p>
+        <h2>مصنع التطبيق</h2>
+        <pre><code>def create_app(config_name):
+    app = Flask(__name__)
+    app.config.from_object(config_map[config_name])
+    db.init_app(app)
+    app.register_blueprint(blogs_bp, url_prefix='/api/blogs')
+    return app</code></pre>
+        <h2>طبقات منفصلة</h2>
+        <ul>
+          <li><strong>المسارات (Routes):</strong> تستقبل الطلب وتعيد الاستجابة فقط</li>
+          <li><strong>الخدمات (Services):</strong> منطق الأعمال</li>
+          <li><strong>النماذج (Models):</strong> طبقة قاعدة البيانات عبر SQLAlchemy</li>
+        </ul>
+        <h2>الأمان والأداء</h2>
+        <p>أضف مصادقة JWT، وتحديد المعدل عبر Flask-Limiter، وتخزيناً مؤقتاً بـ Redis — وستحصل على واجهة API تتحمّل أحمال الإنتاج الحقيقية.</p>
+        <blockquote>البنية النظيفة ليست رفاهية — إنها ما يجعل صيانة المشروع ممكنة بعد عام من إطلاقه.</blockquote>` },
+      { emoji: '🤖', cat: 'AI والأتمتة', slug: 'prompt-engineering-business-automation', title: 'هندسة المطالبات لأتمتة الأعمال: دليل عملي', excerpt: 'تقنيات واقعية لصياغة مطالبات تُشغّل تدفقات أتمتة أعمال موثوقة ومتسقة.', date: '١٥ مايو ٢٠٢٥', read: '٨ دقائق', tags: ['AI', 'Prompts', 'Automation'],
+        body: `
+        <p>المطالبة الجيدة هي الفرق بين أتمتة موثوقة وأخرى عشوائية. في سياق الأعمال، نحتاج مخرجات <strong>متسقة وقابلة للتحليل</strong>.</p>
+        <h2>المبادئ الأساسية</h2>
+        <ul>
+          <li>حدّد الدور والسياق بوضوح</li>
+          <li>اطلب صيغة مخرجات محددة (JSON مثلاً)</li>
+          <li>أعطِ أمثلة (few-shot) لتثبيت السلوك</li>
+        </ul>
+        <h2>مثال عملي</h2>
+        <pre><code>صنّف رسالة العميل التالية وأعد JSON فقط:
+{ "category": "...", "priority": "high|medium|low" }</code></pre>
+        <blockquote>عندما تطلب صيغة منظمة، يصبح بإمكانك ربط مخرجات الذكاء الاصطناعي مباشرة بأنظمتك دون تدخل بشري.</blockquote>
+        <p>بهذه التقنيات تتحول النماذج اللغوية من أداة محادثة إلى محرك أتمتة حقيقي داخل أعمالك.</p>` },
     ],
   },
 
@@ -177,6 +231,8 @@ const TRANSLATIONS = {
     footerMain: '© 2025 <span>Abubaker Hobeldeen Suliman</span> · Software Engineer & AI Solutions Specialist · Cairo, Egypt',
     footerSub: 'Flutter · Python · Flask · AI · Digital Transformation',
     readMore: 'Read More →',
+    blogBack: 'Back to articles', blogLoading: 'Loading article…',
+    blogNotFound: 'This article could not be found.', minRead: 'min read', views: 'views',
 
     roles: [
       'Flutter Developer',
@@ -251,9 +307,61 @@ const TRANSLATIONS = {
     ],
 
     blogs: [
-      { emoji: '📱', cat: 'Flutter', title: 'Building Offline-First Flutter Apps with Hive & Sync Strategy', excerpt: 'How to design Flutter apps that work seamlessly offline and sync gracefully when connectivity returns.', date: 'Jun 10, 2025', read: '7 min' },
-      { emoji: '🐍', cat: 'Python', title: 'Production Flask APIs: Architecture Patterns That Actually Scale', excerpt: 'From basic Flask routes to enterprise-ready REST APIs with blueprints, JWT auth, and proper error handling.', date: 'May 28, 2025', read: '10 min' },
-      { emoji: '🤖', cat: 'AI & Automation', title: 'Prompt Engineering for Business Automation: A Practical Guide', excerpt: 'Real-world techniques for crafting prompts that power reliable, consistent business automation workflows.', date: 'May 15, 2025', read: '8 min' },
+      { emoji: '📱', cat: 'Flutter', slug: 'offline-first-flutter-hive-sync', title: 'Building Offline-First Flutter Apps with Hive & Sync Strategy', excerpt: 'How to design Flutter apps that work seamlessly offline and sync gracefully when connectivity returns.', date: 'Jun 10, 2025', read: '7 min', tags: ['Flutter', 'Hive', 'Offline'],
+        body: `
+        <p>When building mobile apps, connectivity is never guaranteed. An <strong>offline-first</strong> approach makes the app run entirely from a local database, then sync with the server in the background once the network is available.</p>
+        <h2>Why Hive?</h2>
+        <p>Hive is a lightweight NoSQL database written in pure Dart — extremely fast and with no native dependencies, making it ideal for local storage.</p>
+        <ul>
+          <li>Blazing-fast reads and writes</li>
+          <li>Built-in encryption support</li>
+          <li>Clean integration with your models via <code>TypeAdapters</code></li>
+        </ul>
+        <h2>The Sync Strategy</h2>
+        <p>Store every change locally with an <code>isSynced = false</code> flag, then push unsynced records when connectivity returns:</p>
+        <pre><code>final box = await Hive.openBox('tasks');
+await box.put(task.id, task..isSynced = false);
+
+connectivity.onConnectivityChanged.listen((status) {
+  if (status != ConnectivityResult.none) syncPending();
+});</code></pre>
+        <blockquote>The golden rule: the user should never wait on the network — the UI reacts instantly to local data.</blockquote>
+        <h2>Watch the walkthrough</h2>
+        <p>https://youtu.be/lHhRhPV--G0</p>
+        <p>With this approach your app stays responsive in every condition, giving users a reliable experience even on the worst networks.</p>` },
+      { emoji: '🐍', cat: 'Python', slug: 'production-flask-api-architecture', title: 'Production Flask APIs: Architecture Patterns That Actually Scale', excerpt: 'From basic Flask routes to enterprise-ready REST APIs with blueprints, JWT auth, and proper error handling.', date: 'May 28, 2025', read: '10 min', tags: ['Python', 'Flask', 'API'],
+        body: `
+        <p>Going from a toy Flask script to a production-ready API requires clear structure. The key is the <strong>application factory</strong> pattern combined with <strong>blueprints</strong> to separate concerns.</p>
+        <h2>The Application Factory</h2>
+        <pre><code>def create_app(config_name):
+    app = Flask(__name__)
+    app.config.from_object(config_map[config_name])
+    db.init_app(app)
+    app.register_blueprint(blogs_bp, url_prefix='/api/blogs')
+    return app</code></pre>
+        <h2>Separated Layers</h2>
+        <ul>
+          <li><strong>Routes:</strong> only receive the request and return a response</li>
+          <li><strong>Services:</strong> business logic</li>
+          <li><strong>Models:</strong> the database layer via SQLAlchemy</li>
+        </ul>
+        <h2>Security & Performance</h2>
+        <p>Add JWT auth, rate limiting via Flask-Limiter, and Redis caching — and you get an API that survives real production load.</p>
+        <blockquote>Clean architecture isn't a luxury — it's what makes a project maintainable a year after launch.</blockquote>` },
+      { emoji: '🤖', cat: 'AI & Automation', slug: 'prompt-engineering-business-automation', title: 'Prompt Engineering for Business Automation: A Practical Guide', excerpt: 'Real-world techniques for crafting prompts that power reliable, consistent business automation workflows.', date: 'May 15, 2025', read: '8 min', tags: ['AI', 'Prompts', 'Automation'],
+        body: `
+        <p>A good prompt is the difference between reliable automation and random output. In a business context, we need <strong>consistent, parseable</strong> results.</p>
+        <h2>Core Principles</h2>
+        <ul>
+          <li>Define the role and context clearly</li>
+          <li>Request a specific output format (e.g. JSON)</li>
+          <li>Provide few-shot examples to anchor behavior</li>
+        </ul>
+        <h2>A Practical Example</h2>
+        <pre><code>Classify the following customer message and return JSON only:
+{ "category": "...", "priority": "high|medium|low" }</code></pre>
+        <blockquote>When you request structured output, you can wire AI responses directly into your systems with zero human intervention.</blockquote>
+        <p>With these techniques, language models shift from a chat toy into a genuine automation engine inside your business.</p>` },
     ],
   }
 };

@@ -8,7 +8,19 @@
 <meta property="og:title" content="Abubaker Hobeldeen — Software Engineer & AI Solutions Specialist">
 <meta property="og:description" content="Building smart digital solutions with AI — Flutter, Python, Flask, REST APIs">
 <meta property="og:type" content="website">
+<meta property="og:site_name" content="hibbo.tech">
+<meta property="og:url" content="{{ site_url }}/{{ lang }}">
+<meta property="og:image" content="{{ site_url }}/static/images/profile.png">
+<meta property="og:locale" content="{{ 'ar_EG' if lang == 'ar' else 'en_US' }}">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Abubaker Hobeldeen — Software Engineer & AI Solutions Specialist">
+<meta name="twitter:description" content="Building smart digital solutions with AI — Flutter, Python, Flask, REST APIs">
+<meta name="twitter:image" content="{{ site_url }}/static/images/profile.png">
+
+<!-- Canonical + favicon -->
+<link rel="canonical" href="{{ site_url }}/{{ lang }}">
+<link rel="icon" type="image/png" href="/static/images/logo.png">
+<link rel="apple-touch-icon" href="/static/images/logo.png">
 
 <!-- Language alternates (SEO) -->
 <link rel="alternate" hreflang="ar" href="{{ site_url }}/ar">
@@ -30,8 +42,9 @@
   "name": "Abubaker Hobeldeen Suliman",
   "jobTitle": "Software Engineer & AI Solutions Specialist",
   "address": {"@type": "PostalAddress", "addressLocality": "Cairo", "addressCountry": "EG"},
-  "url": "https://abubaker.dev",
-  "sameAs": ["https://linkedin.com/in/abubaker", "https://github.com/abubaker"]
+  "url": "{{ site_url }}",
+  "image": "{{ site_url }}/static/images/profile.png",
+  "sameAs": ["https://github.com/HibooDeveloper"]
 }
 </script>
 
@@ -281,6 +294,38 @@ body.rtl .testi-author>div{text-align:right}
 .blog-meta{display:flex;align-items:center;justify-content:space-between;margin-top:.9rem;padding-top:.9rem;border-top:1px solid var(--border);font-size:.73rem;color:var(--muted)}
 .blog-read{color:var(--blue);font-weight:700;font-size:.76rem;text-decoration:none}
 
+/* ===== BLOG DETAIL (client-rendered) ===== */
+#blogDetail{display:none;padding:7rem 0 5rem;min-height:100vh;background:#fff}
+body.viewing-post>section:not(#blogDetail){display:none}
+body.viewing-post>footer{display:none}
+body.viewing-post #blogDetail{display:block}
+.bd-wrap{max-width:760px;margin:0 auto;padding:0 1.5rem}
+.bd-back{display:inline-flex;align-items:center;gap:.45rem;background:none;border:none;color:var(--blue);font-weight:700;font-size:.88rem;cursor:pointer;font-family:inherit;margin-bottom:1.6rem;padding:.5rem .2rem;min-height:44px}
+.bd-back:hover{text-decoration:underline}
+.bd-cat{font-size:.7rem;font-family:var(--font-mono);font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.8rem}
+.bd-title{font-size:clamp(1.7rem,4.5vw,2.6rem);font-weight:900;color:var(--navy);line-height:1.25;margin-bottom:1rem}
+.bd-meta{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;color:var(--muted);font-size:.83rem;margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border)}
+.bd-cover{width:100%;border-radius:var(--r-lg);margin-bottom:2rem;aspect-ratio:16/9;object-fit:cover;background:linear-gradient(135deg,#EFF6FF,#DBEAFE)}
+.bd-content{font-size:1.04rem;line-height:1.9;color:var(--slate)}
+.bd-content h2{font-size:1.5rem;font-weight:800;color:var(--navy);margin:2.2rem 0 .9rem;line-height:1.35}
+.bd-content h3{font-size:1.2rem;font-weight:800;color:var(--navy);margin:1.8rem 0 .7rem}
+.bd-content p{margin-bottom:1.2rem}
+.bd-content a{color:var(--blue);text-decoration:underline}
+.bd-content ul,.bd-content ol{margin:0 0 1.2rem;padding-inline-start:1.5rem}
+.bd-content li{margin-bottom:.5rem}
+.bd-content img{width:100%;height:auto;border-radius:var(--r);margin:1.5rem 0;display:block}
+.bd-content pre{background:var(--navy);color:#E2E8F0;padding:1.2rem;border-radius:var(--r);overflow-x:auto;margin:1.5rem 0;font-family:var(--font-mono);font-size:.85rem;line-height:1.6}
+.bd-content code{font-family:var(--font-mono);font-size:.88em;background:var(--bg);padding:.15rem .4rem;border-radius:4px}
+.bd-content pre code{background:none;padding:0}
+.bd-content blockquote{border-inline-start:3px solid var(--blue);padding-inline-start:1.2rem;margin:1.5rem 0;color:var(--muted);font-style:italic}
+.video-embed{position:relative;width:100%;aspect-ratio:16/9;margin:1.6rem 0;border-radius:var(--r);overflow:hidden;background:#000}
+.video-embed iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.bd-gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.8rem;margin:1.6rem 0}
+.bd-gallery img{margin:0;height:100%;object-fit:cover}
+.bd-tags{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:2.5rem;padding-top:1.5rem;border-top:1px solid var(--border)}
+.bd-tag{font-size:.75rem;background:var(--bg);border:1px solid var(--border);color:var(--slate);padding:.35rem .8rem;border-radius:100px}
+.bd-state{text-align:center;padding:4rem 0;color:var(--muted);font-size:.95rem}
+
 /* ===== CONTACT ===== */
 .contact-sec{background:var(--navy);padding:5rem 2rem}
 .contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:start}
@@ -450,7 +495,7 @@ body.rtl .annot.a3{left:-1.6rem}
   <div style="background:#0F172A;color:#E2E8F0;padding:1rem 1.5rem;text-align:center;font-family:sans-serif;font-size:.95rem;line-height:1.7">
     هذا الموقع يحتاج إلى تفعيل JavaScript لعرض المحتوى بالكامل.<br>
     This site needs JavaScript enabled to display its full content. Contact:
-    <a href="mailto:abubaker@example.com" style="color:#38BDF8">abubaker@example.com</a>
+    <a href="mailto:abubaker@hibbo.tech" style="color:#38BDF8">abubaker@hibbo.tech</a>
   </div>
 </noscript>
 
@@ -678,9 +723,9 @@ body.rtl .annot.a3{left:-1.6rem}
         <h2 class="section-title" id="contactTitle">هل أنت مستعد لبناء شيء رائع؟</h2>
         <p class="section-sub" id="contactSub">سواء كنت تحتاج تطبيق Flutter، أو واجهة Python خلفية، أو أتمتة بالذكاء الاصطناعي، أو تحولاً رقمياً شاملاً — تحدث معي.</p>
         <div class="c-links">
-          <a class="c-link" href="mailto:abubaker@example.com">
+          <a class="c-link" href="mailto:abubaker@hibbo.tech">
             <div class="c-icon">✉️</div>
-            <div><div class="c-title" id="cEmail">البريد الإلكتروني</div><span>abubaker@example.com</span></div>
+            <div><div class="c-title" id="cEmail">البريد الإلكتروني</div><span>abubaker@hibbo.tech</span></div>
           </a>
           <a class="c-link" href="#">
             <div class="c-icon">💬</div>
@@ -690,9 +735,9 @@ body.rtl .annot.a3{left:-1.6rem}
             <div class="c-icon">🔗</div>
             <div><div class="c-title">LinkedIn</div><span>linkedin.com/in/abubaker</span></div>
           </a>
-          <a class="c-link" href="#">
+          <a class="c-link" href="https://github.com/HibooDeveloper" target="_blank" rel="noopener noreferrer">
             <div class="c-icon">💻</div>
-            <div><div class="c-title">GitHub</div><span>github.com/abubaker</span></div>
+            <div><div class="c-title">GitHub</div><span>github.com/HibooDeveloper</span></div>
           </a>
           <a class="c-link" href="#">
             <div class="c-icon">📍</div>
@@ -709,6 +754,14 @@ body.rtl .annot.a3{left:-1.6rem}
         <button class="submit-btn" id="submitBtn" onclick="handleSubmit()">إرسال الرسالة ←</button>
       </div>
     </div>
+  </div>
+</section>
+
+<!-- BLOG DETAIL (client-rendered single-post view) -->
+<section id="blogDetail" aria-live="polite">
+  <div class="bd-wrap">
+    <button class="bd-back" type="button" id="bdBack" onclick="closePost()">← رجوع</button>
+    <div id="bdInner"></div>
   </div>
 </section>
 

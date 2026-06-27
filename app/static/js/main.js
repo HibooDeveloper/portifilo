@@ -31,6 +31,24 @@ document.addEventListener('click', function(e) {
       hamburger.setAttribute('aria-expanded', 'false');
     }
   }
+
+  // While viewing a blog post, any in-page anchor link (header nav, logo,
+  // hero CTAs) must first exit the detail view and restore the /<lang> URL,
+  // then scroll to its target section — otherwise it would scroll toward a
+  // hidden (display:none) section and leave the post open.
+  const anchor = e.target.closest('a[href^="#"]');
+  if (anchor && document.body.classList.contains('viewing-post')) {
+    e.preventDefault();
+    const id = anchor.getAttribute('href').slice(1);
+    history.pushState({ view: 'home' }, '', `/${currentLang}`);
+    showHome();
+    const target = id ? document.getElementById(id) : null;
+    // Wait a frame so the sections are repainted (display restored) before scrolling.
+    requestAnimationFrame(function() {
+      if (target) target.scrollIntoView({ behavior: 'smooth' });
+      else window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
 });
 
 // ─── Particle Canvas ─────────────────────────────────────────
@@ -322,22 +340,59 @@ function renderTestimonials(t) {
     </div>`).join('');
 }
 
-function renderBlog(t) {
+// Render the homepage blog grid. Shows the static sample posts instantly,
+// then upgrades to live posts from the backend API if any are published.
+async function renderBlog(t) {
   const el = document.getElementById('blogGrid');
   if (!el) return;
-  el.innerHTML = t.blogs.map((b, i) => `
-    <div class="blog-card reveal" style="transition-delay:${i * 0.1}s">
-      <div class="blog-thumb" style="background:linear-gradient(135deg,#EFF6FF,#DBEAFE)">${b.emoji}</div>
+  el.innerHTML = blogCardsHTML(t.blogs.map(staticToPost), t);
+  observe();
+  try {
+    const res = await fetch(`/api/blogs/?lang=${currentLang}&per_page=3`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data && Array.isArray(data.items) && data.items.length) {
+        el.innerHTML = blogCardsHTML(data.items, t);
+        observe();
+      }
+    }
+  } catch (e) { /* offline / no backend → keep static fallback */ }
+}
+
+function blogCardsHTML(items, t) {
+  return items.map((b, i) => {
+    const slug  = b.slug || '';
+    const cat   = b.category || b.cat || '';
+    const date  = fmtDate(b.published_at) || b.date || '';
+    const read  = b.read || ((b.read_time_min || 5) + ' ' + (t.minRead || ''));
+    const thumb = b.cover_url
+      ? `<div class="blog-thumb" style="padding:0"><img src="${b.cover_url}" alt="${escapeHtml(b.title)}" loading="lazy" style="width:100%;height:100%;object-fit:cover"></div>`
+      : `<div class="blog-thumb" style="background:linear-gradient(135deg,#EFF6FF,#DBEAFE)">${b.emoji || '📝'}</div>`;
+    const href  = slug ? `/${currentLang}/blog/${encodeURIComponent(slug)}` : '#blog';
+    const click = slug ? `onclick="navPost(event,'${slug.replace(/'/g, "\\'")}')"` : '';
+    return `
+    <a class="blog-card reveal" href="${href}" ${click} style="display:block;text-decoration:none;color:inherit;transition-delay:${i * 0.1}s">
+      ${thumb}
       <div class="blog-body">
-        <div class="blog-cat">${b.cat}</div>
-        <div class="blog-title">${b.title}</div>
-        <div class="blog-excerpt">${b.excerpt}</div>
+        <div class="blog-cat">${escapeHtml(cat)}</div>
+        <div class="blog-title">${escapeHtml(b.title)}</div>
+        <div class="blog-excerpt">${escapeHtml(b.excerpt || '')}</div>
         <div class="blog-meta">
-          <span>${b.date} · ${b.read}</span>
-          <a class="blog-read" href="#">${t.readMore}</a>
+          <span>${date}${read ? ' · ' + read : ''}</span>
+          <span class="blog-read">${t.readMore}</span>
         </div>
       </div>
-    </div>`).join('');
+    </a>`;
+  }).join('');
+}
+
+// Normalize a static TRANSLATIONS blog object into the API post shape.
+function staticToPost(s) {
+  return {
+    slug: s.slug, title: s.title, category: s.cat, excerpt: s.excerpt,
+    emoji: s.emoji, read: s.read, published_at: s.date,
+    tags: s.tags || [], content: s.body || `<p>${escapeHtml(s.excerpt || '')}</p>`,
+  };
 }
 
 // ─── Language Switcher ────────────────────────────────────────
@@ -465,13 +520,170 @@ function switchLang(lang) {
     history.pushState({ lang }, '', url);
   }
   setLang(lang);
+  // If a blog post is open, reload it in the newly selected language.
+  if (document.body.classList.contains('viewing-post')) {
+    const r = parseRoute();
+    if (r.view === 'post') openPost(r.slug, false);
+  }
 }
 
-// Re-apply language when navigating browser history.
+// Re-apply language + view when navigating browser history.
 window.addEventListener('popstate', () => {
   const m = window.location.pathname.match(/^\/(ar|en)(?=\/|$)/);
   setLang(m ? m[1] : 'ar');
+  const r = parseRoute();
+  if (r.view === 'post') openPost(r.slug, false);
+  else showHome();
 });
+
+// ─── Blog Detail: routing & single-post view ──────────────────
+function parseRoute() {
+  const m = window.location.pathname.match(/^\/(ar|en)\/blog\/([^\/?#]+)/);
+  return m ? { view: 'post', lang: m[1], slug: decodeURIComponent(m[2]) } : { view: 'home' };
+}
+
+// Card click → open post without a full page reload.
+function navPost(e, slug) {
+  if (e) e.preventDefault();
+  openPost(slug, true);
+}
+
+async function openPost(slug, push) {
+  const t = TRANSLATIONS[currentLang];
+  if (push) {
+    history.pushState({ view: 'post', slug }, '', `/${currentLang}/blog/${encodeURIComponent(slug)}`);
+  }
+  document.body.classList.add('viewing-post');
+  window.scrollTo(0, 0);
+  setBackLabel();
+  const inner = document.getElementById('bdInner');
+  if (inner) inner.innerHTML = `<div class="bd-state">${t.blogLoading || '…'}</div>`;
+
+  let post = null;
+  try {
+    const res = await fetch(`/api/blogs/${encodeURIComponent(slug)}?lang=${currentLang}`);
+    if (res.ok) post = await res.json();
+  } catch (e) { /* fall through to static */ }
+
+  if (!post) {
+    const s = (t.blogs || []).find(b => b.slug === slug);
+    if (s) post = staticToPost(s);
+  }
+  if (!post) {
+    if (inner) inner.innerHTML = `<div class="bd-state">${t.blogNotFound || 'Not found.'}</div>`;
+    document.title = (t.blogNotFound || 'Not found') + ' — hibbo.tech';
+    return;
+  }
+  renderPostDetail(post);
+}
+
+function renderPostDetail(post) {
+  const t = TRANSLATIONS[currentLang];
+  const inner = document.getElementById('bdInner');
+  if (!inner) return;
+  const date = fmtDate(post.published_at) || post.date || '';
+  const read = post.read || ((post.read_time_min || 5) + ' ' + (t.minRead || ''));
+  const cover = post.cover_url
+    ? `<img class="bd-cover" src="${post.cover_url}" alt="${escapeHtml(post.title)}" loading="lazy">`
+    : (post.emoji ? `<div class="bd-cover" style="display:flex;align-items:center;justify-content:center;font-size:4rem">${post.emoji}</div>` : '');
+  const tags = (post.tags && post.tags.length)
+    ? `<div class="bd-tags">${post.tags.map(tg => `<span class="bd-tag">#${escapeHtml(tg)}</span>`).join('')}</div>` : '';
+  const meta = [date, read, (post.view_count != null ? post.view_count + ' ' + (t.views || '') : '')]
+    .filter(Boolean).map(x => `<span>${x}</span>`).join('<span>·</span>');
+
+  inner.innerHTML =
+    (post.category ? `<div class="bd-cat">${escapeHtml(post.category)}</div>` : '') +
+    `<h1 class="bd-title">${escapeHtml(post.title)}</h1>` +
+    `<div class="bd-meta">${meta}</div>` +
+    cover +
+    `<div class="bd-content" id="bdContent"></div>` +
+    tags;
+
+  const cont = document.getElementById('bdContent');
+  cont.innerHTML = post.content || `<p>${escapeHtml(post.excerpt || '')}</p>`;
+  enhanceContent(cont);
+  document.title = post.title + ' — hibbo.tech';
+}
+
+function closePost() {
+  history.pushState({ view: 'home' }, '', `/${currentLang}`);
+  showHome();
+  const blog = document.getElementById('blog');
+  if (blog) blog.scrollIntoView();
+}
+
+function showHome() {
+  document.body.classList.remove('viewing-post');
+  document.title = currentLang === 'ar'
+    ? 'أبوبكر هبل الدين — مهندس برمجيات وخبير حلول ذكاء اصطناعي'
+    : 'Abubaker Hobeldeen — Software Engineer & AI Solutions Specialist';
+}
+
+function setBackLabel() {
+  const b = document.getElementById('bdBack');
+  if (!b) return;
+  const arrow = currentLang === 'ar' ? '→' : '←';
+  b.innerHTML = `<span aria-hidden="true">${arrow}</span> ${TRANSLATIONS[currentLang].blogBack || 'Back'}`;
+}
+
+// ─── Rich-content enhancement (YouTube auto-embed, lazy images) ─
+const YT_RE = /(?:youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|v\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/;
+function ytId(url) { const m = String(url || '').match(YT_RE); return m ? m[1] : null; }
+function ytEmbed(id) {
+  return `<div class="video-embed"><iframe src="https://www.youtube-nocookie.com/embed/${id}" `
+    + `title="YouTube video player" loading="lazy" allowfullscreen `
+    + `allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture"></iframe></div>`;
+}
+
+// Turn YouTube links/iframes inside admin/static HTML into responsive players,
+// and make all images lazy-loaded. Handles standard URLs, youtu.be, shorts,
+// existing iframes, anchor links, and bare pasted URLs.
+function enhanceContent(root) {
+  if (!root) return;
+  // 1) Existing iframes → wrap responsively.
+  root.querySelectorAll('iframe').forEach(f => {
+    const id = ytId(f.getAttribute('src'));
+    if (id && !f.closest('.video-embed')) {
+      const wrap = document.createElement('div'); wrap.innerHTML = ytEmbed(id);
+      f.replaceWith(wrap.firstElementChild);
+    }
+  });
+  // 2) Anchor links pointing at YouTube → embed (replace the whole <p> if the
+  //    link is its sole content, to avoid a block <div> nested in a <p>).
+  root.querySelectorAll('a').forEach(a => {
+    const id = ytId(a.getAttribute('href'));
+    if (!id) return;
+    const wrap = document.createElement('div'); wrap.innerHTML = ytEmbed(id);
+    const node = wrap.firstElementChild;
+    const p = a.parentElement;
+    if (p && p.tagName === 'P' && p.textContent.trim() === a.textContent.trim()) p.replaceWith(node);
+    else a.replaceWith(node);
+  });
+  // 3) Paragraphs whose entire text is a bare YouTube URL → embed.
+  root.querySelectorAll('p').forEach(p => {
+    const txt = p.textContent.trim();
+    const id = ytId(txt);
+    if (id && p.children.length === 0 && /^https?:\/\/\S+$/.test(txt)) {
+      const wrap = document.createElement('div'); wrap.innerHTML = ytEmbed(id);
+      p.replaceWith(wrap.firstElementChild);
+    }
+  });
+  // 4) Lazy + async images.
+  root.querySelectorAll('img').forEach(img => { img.loading = 'lazy'; img.decoding = 'async'; });
+}
+
+// ─── Date / HTML helpers ──────────────────────────────────────
+function fmtDate(v) {
+  if (!v) return '';
+  const d = new Date(v);
+  if (isNaN(d.getTime())) return v;   // already a localized string (static data)
+  return d.toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US',
+    { year: 'numeric', month: 'short', day: 'numeric' });
+}
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g,
+    c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
 
 // ─── Helpers ──────────────────────────────────────────────────
 function setText(id, value, html = false) {
@@ -542,4 +754,7 @@ window.addEventListener('scroll', () => {
 document.addEventListener('DOMContentLoaded', () => {
   // Initialize from the language the server rendered into <html lang="…">.
   setLang(document.documentElement.lang === 'en' ? 'en' : 'ar');
+  // Deep link: if the URL is /<lang>/blog/<slug>, open that post directly.
+  const r = parseRoute();
+  if (r.view === 'post') openPost(r.slug, false);
 });

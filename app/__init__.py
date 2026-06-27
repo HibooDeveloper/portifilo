@@ -124,6 +124,45 @@ def create_app(config_name: str = None) -> Flask:
         upload_dir = os.path.abspath(app.config['UPLOAD_FOLDER'])
         return send_from_directory(upload_dir, filepath)
 
+    # ── SEO: robots.txt & sitemap.xml ─────────────────────────
+    @app.route('/robots.txt')
+    def robots_txt():
+        from flask import Response
+        site_url = app.config.get('SITE_URL', '').rstrip('/')
+        body = (
+            "User-agent: *\n"
+            "Allow: /\n"
+            "Disallow: /api/\n"
+            "Disallow: /uploads/\n"
+            f"Sitemap: {site_url}/sitemap.xml\n"
+        )
+        return Response(body, mimetype='text/plain')
+
+    @app.route('/sitemap.xml')
+    def sitemap_xml():
+        from flask import Response
+        site_url = app.config.get('SITE_URL', '').rstrip('/')
+        urls = []
+        for lang in SUPPORTED_LANGS:
+            loc = f"{site_url}/{lang}"
+            alts = ''.join(
+                f'<xhtml:link rel="alternate" hreflang="{l}" href="{site_url}/{l}"/>'
+                for l in SUPPORTED_LANGS
+            )
+            alts += f'<xhtml:link rel="alternate" hreflang="x-default" href="{site_url}/{DEFAULT_LANG}"/>'
+            urls.append(
+                f'<url><loc>{loc}</loc>{alts}'
+                f'<changefreq>weekly</changefreq><priority>1.0</priority></url>'
+            )
+        xml = (
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
+            'xmlns:xhtml="http://www.w3.org/1999/xhtml">'
+            + ''.join(urls) +
+            '</urlset>'
+        )
+        return Response(xml, mimetype='application/xml')
+
     # ── Health check ──────────────────────────────────────────
     @app.route('/health')
     def health():
