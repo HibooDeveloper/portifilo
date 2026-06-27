@@ -11,6 +11,57 @@ let currentFilter = 'all';
 let typingTimer = null;
 let typingRI = 0, typingCI = 0, typingDel = false;
 
+// ─── Analytics (visitor tracking) ────────────────────────────
+// Posts lightweight page_view events to /api/analytics/track so the admin
+// dashboard reflects real traffic. Fully fail-safe: any error is swallowed
+// so analytics can never break the page or block navigation.
+const Analytics = (function () {
+  function sessionId() {
+    try {
+      let s = sessionStorage.getItem('an_sid');
+      if (!s) {
+        s = Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+        sessionStorage.setItem('an_sid', s);
+      }
+      return s;
+    } catch (e) { return ''; }
+  }
+  function device() {
+    const w = window.innerWidth || document.documentElement.clientWidth || 0;
+    if (w && w <= 640) return 'mobile';
+    if (w && w <= 1024) return 'tablet';
+    return 'desktop';
+  }
+  function browser() {
+    const ua = navigator.userAgent || '';
+    if (/Edg\//.test(ua)) return 'Edge';
+    if (/OPR\/|Opera/.test(ua)) return 'Opera';
+    if (/Firefox\//.test(ua)) return 'Firefox';
+    if (/Chrome\//.test(ua)) return 'Chrome';
+    if (/Safari\//.test(ua)) return 'Safari';
+    return 'Other';
+  }
+  function track(eventType) {
+    try {
+      fetch('/api/analytics/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        keepalive: true,
+        body: JSON.stringify({
+          event_type: eventType || 'page_view',
+          path: window.location.pathname,
+          referrer: document.referrer || '',
+          device: device(),
+          browser: browser(),
+          lang: (typeof currentLang !== 'undefined' ? currentLang : 'ar'),
+          session_id: sessionId()
+        })
+      }).catch(function () {});
+    } catch (e) { /* never break the page */ }
+  }
+  return { track: track };
+})();
+
 // ─── Mobile Menu Toggle ──────────────────────────────────────
 function toggleMenu() {
   const hamburger = document.getElementById('hamburger');
@@ -553,6 +604,7 @@ async function openPost(slug, push) {
   if (push) {
     history.pushState({ view: 'post', slug }, '', `/${currentLang}/blog/${encodeURIComponent(slug)}`);
   }
+  Analytics.track('page_view');
   document.body.classList.add('viewing-post');
   window.scrollTo(0, 0);
   setBackLabel();
@@ -757,4 +809,5 @@ document.addEventListener('DOMContentLoaded', () => {
   // Deep link: if the URL is /<lang>/blog/<slug>, open that post directly.
   const r = parseRoute();
   if (r.view === 'post') openPost(r.slug, false);
+  else Analytics.track('page_view');
 });
