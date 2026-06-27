@@ -355,11 +355,53 @@ async function renderServices(t) {
   el.innerHTML = t.services.map((s, i) => svcCard(s.icon, s.name, s.desc, s.tags, i)).join('');
 }
 
-function renderProjects(filter) {
+// Live projects are cached per language so filter clicks don't refetch.
+let projectsCache = null;
+let projectsCacheLang = null;
+
+function projBadge(t, cat) {
+  const f = (t.pfFilters || []).find(x => x.val === cat);
+  return f ? f.label : (cat || '');
+}
+
+function projThumb(p) {
+  if (p.cover_url) {
+    const src = String(p.cover_url).replace(/"/g, '&quot;');
+    return `<img src="${src}" alt="" loading="lazy" decoding="async">`;
+  }
+  return p.emoji || '🚀';
+}
+
+function projLink(url, label) {
+  const u = (url || '').trim();
+  return `<a class="proj-link" href="${u ? u.replace(/"/g, '&quot;') : '#'}"${u ? ' target="_blank" rel="noopener"' : ''}>${label}</a>`;
+}
+
+function projCard(p, t, i) {
+  return `
+    <div class="proj-card reveal" style="transition-delay:${i * 0.08}s">
+      <div class="proj-thumb">
+        ${projThumb(p)}
+        <div class="proj-badge">${p.badge || ''}</div>
+      </div>
+      <div class="proj-body">
+        <div class="proj-name">${p.name || ''}</div>
+        <div class="proj-desc">${p.desc || ''}</div>
+        <div class="proj-techs">${(p.tech || []).map(tc => `<span class="tech-pill">${tc}</span>`).join('')}</div>
+        <div class="proj-links">
+          ${projLink(p.live_url, t.projDemo)}
+          ${projLink(p.github_url, t.projGit)}
+          ${projLink(p.case_study_url, t.projCase)}
+        </div>
+      </div>
+    </div>`;
+}
+
+async function renderProjects(filter) {
   currentFilter = filter;
   const t = TRANSLATIONS[currentLang];
 
-  // Filters
+  // Filter buttons — labels are UI text, always from translations.
   const pfWrap = document.getElementById('pfWrap');
   if (pfWrap) {
     pfWrap.innerHTML = t.pfFilters.map(f => `
@@ -367,27 +409,42 @@ function renderProjects(filter) {
         onclick="filterProjects('${f.val}',this)">${f.label}</button>`).join('');
   }
 
-  // Cards
   const pg = document.getElementById('projectsGrid');
   if (!pg) return;
-  const filtered = filter === 'all' ? t.projects : t.projects.filter(p => p.cat === filter);
-  pg.innerHTML = filtered.map((p, i) => `
-    <div class="proj-card reveal" style="transition-delay:${i * 0.08}s">
-      <div class="proj-thumb">
-        ${p.emoji}
-        <div class="proj-badge">${p.badge}</div>
-      </div>
-      <div class="proj-body">
-        <div class="proj-name">${p.name}</div>
-        <div class="proj-desc">${p.desc}</div>
-        <div class="proj-techs">${p.tech.map(tc => `<span class="tech-pill">${tc}</span>`).join('')}</div>
-        <div class="proj-links">
-          <a class="proj-link" href="#">${t.projDemo}</a>
-          <a class="proj-link" href="#">${t.projGit}</a>
-          <a class="proj-link" href="#">${t.projCase}</a>
-        </div>
-      </div>
-    </div>`).join('');
+
+  // Pull the live project list from the admin DB; fall back to the bundled
+  // static list only if the API is unreachable or returns nothing.
+  let list = (projectsCache && projectsCacheLang === currentLang) ? projectsCache : null;
+  if (!list) {
+    const lang = currentLang;
+    try {
+      const res = await fetch(`/api/projects/?lang=${lang}&per_page=100`);
+      if (res.ok) {
+        const data = await res.json();
+        const items = (data && data.items) || [];
+        if (currentLang !== lang) return; // language switched mid-fetch
+        if (items.length) {
+          list = items.map(p => ({
+            cat: p.category || '',
+            cover_url: p.cover_url || '',
+            badge: projBadge(t, p.category),
+            name: p.title || '',
+            desc: p.description || '',
+            tech: Array.isArray(p.tech_stack) ? p.tech_stack : [],
+            live_url: p.live_url || '',
+            github_url: p.github_url || '',
+            case_study_url: p.case_study_url || '',
+          }));
+          projectsCache = list;
+          projectsCacheLang = lang;
+        }
+      }
+    } catch (e) { /* fall through to static */ }
+  }
+  if (!list) list = t.projects;
+
+  const filtered = filter === 'all' ? list : list.filter(p => p.cat === filter);
+  pg.innerHTML = filtered.map((p, i) => projCard(p, t, i)).join('');
   observe();
 }
 
@@ -408,22 +465,65 @@ function renderAICards(t) {
     </div>`).join('');
 }
 
-function renderTestimonials(t) {
-  const el = document.getElementById('testiGrid');
-  if (!el) return;
-  el.innerHTML = t.testimonials.map((item, i) => `
+function testiAvatar(item) {
+  if (item.avatar_url) {
+    const src = String(item.avatar_url).replace(/"/g, '&quot;');
+    return `<div class="testi-avatar"><img src="${src}" alt="" loading="lazy" decoding="async"></div>`;
+  }
+  const av = item.avatar || (item.name ? item.name.trim().charAt(0).toUpperCase() : '👤');
+  const bg = item.color || '#2563EB';
+  return `<div class="testi-avatar" style="background:${bg}">${av}</div>`;
+}
+
+function testiCard(item, i) {
+  return `
     <div class="testi-card reveal" style="transition-delay:${i * 0.1}s">
       <div class="testi-quote">"</div>
-      <div class="testi-text">${item.text}</div>
+      <div class="testi-text">${item.text || ''}</div>
       <div class="testi-author">
-        <div class="testi-avatar" style="background:${item.color}">${item.avatar}</div>
+        ${testiAvatar(item)}
         <div>
-          <div class="testi-name">${item.name}</div>
-          <div class="testi-role">${item.role}</div>
-          <div class="stars">${'★'.repeat(item.stars)}</div>
+          <div class="testi-name">${item.name || ''}</div>
+          <div class="testi-role">${item.role || ''}</div>
+          <div class="stars">${'★'.repeat(item.stars || 0)}</div>
         </div>
       </div>
-    </div>`).join('');
+    </div>`;
+}
+
+async function renderTestimonials(t) {
+  const el = document.getElementById('testiGrid');
+  if (!el) return;
+  // Live testimonials from the admin DB; static list is the offline fallback.
+  const lang = currentLang;
+  try {
+    const res = await fetch(`/api/testimonials/?lang=${lang}&per_page=100`);
+    if (res.ok) {
+      const data = await res.json();
+      const items = (data && data.items) || [];
+      if (currentLang !== lang) return; // language switched mid-fetch
+      if (items.length) {
+        el.innerHTML = items.map((item, i) => testiCard({
+          text: item.text || '',
+          avatar_url: item.avatar_url || '',
+          name: item.client_name || '',
+          role: item.client_role || '',
+          stars: item.rating || 5,
+        }, i)).join('');
+        observe();
+        return;
+      }
+    }
+  } catch (e) { /* fall through to static */ }
+  el.innerHTML = t.testimonials.map((item, i) => testiCard({
+    text: item.text,
+    avatar: item.avatar,
+    color: item.color,
+    name: item.name,
+    role: item.role,
+    stars: item.stars,
+  }, i)).join('');
+  observe();
 }
 
 // Render the homepage blog grid. Shows the static sample posts instantly,
