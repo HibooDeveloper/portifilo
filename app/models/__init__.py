@@ -160,7 +160,7 @@ class Service(db.Model):
     __tablename__ = 'services'
 
     id          = db.Column(db.Integer, primary_key=True)
-    icon        = db.Column(db.String(10))
+    icon        = db.Column(db.String(255))  # emoji OR an uploaded image URL
     title_ar    = db.Column(db.String(200), nullable=False)
     title_en    = db.Column(db.String(200), nullable=False)
     desc_ar     = db.Column(db.Text)

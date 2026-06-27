@@ -308,10 +308,23 @@ function renderSkills(t) {
     </div>`).join('');
 }
 
+// An icon value can be a short emoji or an uploaded image URL/path. Render an
+// <img> for the latter, otherwise show the emoji text as before.
+function svcIconHtml(icon) {
+  const v = (icon || '').trim();
+  if (!v) return '';
+  const isImage = /^(https?:)?\/\//.test(v) || v.startsWith('/') || /\.(png|jpe?g|webp|gif|svg)$/i.test(v);
+  if (isImage) {
+    const src = v.replace(/"/g, '&quot;');
+    return `<img src="${src}" alt="" loading="lazy" decoding="async">`;
+  }
+  return v;
+}
+
 function svcCard(icon, name, desc, tags, i) {
   return `
     <div class="svc-card reveal" style="transition-delay:${i * 0.07}s">
-      <div class="svc-icon">${icon || ''}</div>
+      <div class="svc-icon">${svcIconHtml(icon)}</div>
       <div class="svc-name">${name || ''}</div>
       <div class="svc-desc">${desc || ''}</div>
       <div class="svc-tags">${(tags || []).map(tag => `<span class="s-tag">${tag}</span>`).join('')}</div>
