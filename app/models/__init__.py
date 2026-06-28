@@ -460,3 +460,21 @@ class AuditLog(db.Model):
             'user': self.user.to_dict() if self.user else None,
             'created_at': self.created_at.isoformat(),
         }
+
+
+# ─── Site Content ─────────────────────────────────────────────
+# Editable bilingual homepage text (hero, about, section headings, contact,
+# footer, …). Each row overrides one key from the static translations.js; any
+# key with no row falls back to the bundled default on the site.
+
+class SiteContent(db.Model):
+    __tablename__ = 'site_content'
+
+    id         = db.Column(db.Integer, primary_key=True)
+    key        = db.Column(db.String(80), unique=True, nullable=False, index=True)
+    value_ar   = db.Column(db.Text)
+    value_en   = db.Column(db.Text)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def to_pair(self):
+        return {'ar': self.value_ar, 'en': self.value_en}

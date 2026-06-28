@@ -961,8 +961,35 @@ window.addEventListener('scroll', () => {
   if (nav) nav.style.boxShadow = window.scrollY > 20 ? '0 2px 20px rgba(0,0,0,.06)' : '';
 });
 
+// ─── Editable site content ────────────────────────────────────
+// Overlay admin-edited text onto the bundled TRANSLATIONS defaults. Mutating
+// TRANSLATIONS in place means every existing reference picks up the override
+// with no other code changes; anything not overridden keeps its default.
+async function applySiteContent() {
+  try {
+    const res = await fetch('/api/site-content/');
+    if (!res.ok) return;
+    const data = await res.json(); // { key: {ar, en} }
+    for (const [key, val] of Object.entries(data || {})) {
+      if (!val) continue;
+      for (const lang of ['ar', 'en']) {
+        let v = val[lang];
+        if (v == null || v === '') continue;
+        // `roles` is a list (typing effect): store one role per line.
+        if (key === 'roles') {
+          v = String(v).split('\n').map(s => s.trim()).filter(Boolean);
+          if (!v.length) continue;
+        }
+        if (TRANSLATIONS[lang]) TRANSLATIONS[lang][key] = v;
+      }
+    }
+  } catch (e) { /* offline / no backend → keep static defaults */ }
+}
+
 // ─── Init ─────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  // Pull admin content edits before the first paint so overrides show at once.
+  await applySiteContent();
   // Initialize from the language the server rendered into <html lang="…">.
   setLang(document.documentElement.lang === 'en' ? 'en' : 'ar');
   // Deep link: if the URL is /<lang>/blog/<slug>, open that post directly.

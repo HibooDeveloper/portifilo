@@ -24,7 +24,8 @@ from datetime import datetime
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app import create_app, db
-from app.models import Service, Project, Testimonial, BlogPost, Skill, AICard
+from app.models import (Service, Project, Testimonial, BlogPost, Skill, AICard,
+                        SiteContent)
 
 
 def slugify(text):
@@ -289,11 +290,96 @@ BLOGS = [
 ]
 
 
+# ── Site content (editable homepage text) ──────────────────────────────
+# (key, arabic, english). Seeded so the admin sees the current text already
+# filled in and can edit it. The site falls back to these same defaults.
+SITE_CONTENT = [
+    ('heroBadge', 'متاح للمشاريع الجديدة', 'Available for projects'),
+    ('heroHead',
+     'بناء حلول رقمية<br><span class="accent">ذكية وقابلة للتوسع</span><br>بالذكاء الاصطناعي',
+     'Building Smart<br><span class="accent">Digital Solutions</span><br>with AI'),
+    ('heroSub',
+     'أساعد الشركات الناشئة والمؤسسات الكبرى على تحويل أفكارها إلى منتجات رقمية قابلة للتوسع — من تطبيقات Flutter إلى واجهات خلفية مدعومة بالذكاء الاصطناعي.',
+     'Helping startups and enterprises transform ideas into scalable digital products — from Flutter apps to AI-powered backends.'),
+    ('btnProj', 'استعرض المشاريع ↓', 'View Projects ↓'),
+    ('btnContact', 'تواصل معي ←', 'Contact Me →'),
+    ('s1', 'سنوات خبرة', 'Years Experience'),
+    ('s2', 'مشروع مُنجز', 'Projects Delivered'),
+    ('s3', 'رضا العملاء', 'Client Satisfaction'),
+    ('fb2', '🤖 مدعوم بالذكاء الاصطناعي', '🤖 AI Integrated'),
+    ('roles',
+     'مطور Flutter\nمطور Python خلفي\nخبير حلول الذكاء الاصطناعي\nمستشار التحول الرقمي\nمهندس تطبيقات الجوال',
+     'Flutter Developer\nPython Backend Dev\nAI Solutions Specialist\nDigital Transformation Consultant\nMobile App Engineer'),
+    ('aboutRole', '// مهندس برمجيات · Flutter · حلول الذكاء الاصطناعي',
+     '// Software Engineer · Flutter · AI Solutions'),
+    ('availText', 'متاح للمشاريع الجديدة · القاهرة، مصر 🌍',
+     'Available for projects · Cairo, Egypt 🌍'),
+    ('projCount', 'مشروع مبني', 'Projects Built'),
+    ('freeTxt', 'بدأ العمل الحر', 'Started Freelancing'),
+    ('aboutLabel', 'عني', 'About Me'),
+    ('aboutTitle', 'مهندس بالتدريب،<br>صانع بالشغف',
+     'Engineer by training,<br>builder by passion'),
+    ('aboutP1',
+     'أنا مهندس برمجيات من القاهرة، مصر، متخصص في تطوير تطبيقات Flutter المحمولة، وواجهات Python الخلفية، والحلول المدعومة بالذكاء الاصطناعي. بخلفية في هندسة الحاسوب وأكثر من 5 سنوات من الخبرة في العمل الحر، أساعد الشركات على تحويل أفكارها إلى منتجات رقمية جاهزة للإنتاج.',
+     "I'm a Software Engineer from Cairo, Egypt specializing in Flutter mobile development, Python backends, and AI-powered solutions. With a foundation in Computer Engineering and 5+ years of freelancing experience, I help businesses transform their ideas into production-ready digital products."),
+    ('aboutP2',
+     'أعمل عبر المجموعة التقنية الكاملة — من تصميم واجهات Flutter السلسة إلى بناء REST APIs قوية بـ Flask، ودمج قدرات الذكاء الاصطناعي، وإدارة مشاريع التحول الرقمي للشركات في المنطقة العربية وخارجها.',
+     "I work across the full stack — from crafting smooth mobile UIs in Flutter/Dart to building robust REST APIs in Flask, integrating AI capabilities, and managing digital transformation projects for startups and enterprises worldwide."),
+    ('skillsLabel', 'الخبرات', 'Expertise'),
+    ('skillsTitle', 'المهارات والتقنيات', 'Skills & Technologies'),
+    ('skillsSub', 'الأدوات والتقنيات التي أستخدمها لبناء منتجات رقمية احترافية.',
+     'Tools and technologies I use to build production-grade digital products.'),
+    ('svcLabel', 'ماذا أقدم', 'What I Do'),
+    ('svcTitle', 'خدماتي', 'Services I Offer'),
+    ('svcSub',
+     'حلول رقمية متكاملة — من تطبيقات الجوال والأنظمة الخلفية إلى الذكاء الاصطناعي والاستشارات الرقمية.',
+     'End-to-end digital solutions — from mobile apps and backends to AI systems and digital strategy.'),
+    ('projLabel', 'أعمالي', 'Portfolio'),
+    ('projTitle', 'المشاريع المميزة', 'Featured Projects'),
+    ('projSub', 'حلول واقعية مبنية بأحدث التقنيات — جوال، خلفيات، ويب، وذكاء اصطناعي.',
+     'Real-world solutions built with modern technology — mobile, backend, web, and AI.'),
+    ('projDemo', 'عرض مباشر ↗', 'Live Demo ↗'),
+    ('projGit', 'GitHub ⌥', 'GitHub ⌥'),
+    ('projCase', 'دراسة الحالة 📖', 'Case Study 📖'),
+    ('aiLabel', 'حلول الذكاء الاصطناعي', 'AI Solutions'),
+    ('aiTitle', 'أتمتة ذكية<br>للأعمال الحديثة',
+     'Intelligent Automation<br>for Modern Businesses'),
+    ('aiSub',
+     'أصمم وأنشر أنظمة مدعومة بالذكاء الاصطناعي تُؤتمت سير العمل، وتُولّد المحتوى، وتُحوّل طريقة عمل الشركات.',
+     'I design and deploy AI-powered systems that automate workflows, generate content, and transform how businesses operate.'),
+    ('userLbl', 'المستخدم', 'USER'),
+    ('aiLbl', 'المساعد الذكي', 'AI ASSISTANT'),
+    ('testiLabel', 'آراء العملاء', 'Client Reviews'),
+    ('testiTitle', 'ماذا يقول عملائي', 'What Clients Say'),
+    ('blogLabel', 'مركز المعرفة', 'Knowledge Hub'),
+    ('blogTitle', 'آخر المقالات', 'Latest Articles'),
+    ('blogAll', 'عرض الكل →', 'View All →'),
+    ('contactLabel', 'تواصل معي', 'Get in Touch'),
+    ('contactTitle', 'هل أنت مستعد لبناء شيء رائع؟', 'Ready to build something great?'),
+    ('contactSub',
+     'سواء كنت تحتاج تطبيق Flutter، أو واجهة Python خلفية، أو أتمتة بالذكاء الاصطناعي، أو تحولاً رقمياً شاملاً — تحدث معي.',
+     "Whether you need a Flutter app, a Python backend, AI automation, or full digital transformation — let's talk."),
+    ('cEmail', 'البريد الإلكتروني', 'Email'),
+    ('cWA', 'واتساب', 'WhatsApp'),
+    ('cLoc', 'الموقع', 'Location'),
+    ('cLocVal', 'القاهرة، مصر — عن بُعد في جميع أنحاء العالم',
+     'Cairo, Egypt — Remote worldwide'),
+    ('formTitle', 'أرسل رسالة', 'Send a Message'),
+    ('lName', 'الاسم الكامل', 'Full Name'),
+    ('lEmail', 'البريد الإلكتروني', 'Email Address'),
+    ('lPhone', 'الهاتف (اختياري)', 'Phone (optional)'),
+    ('lMsg', 'الرسالة', 'Message'),
+    ('submitBtn', 'إرسال الرسالة ←', 'Send Message →'),
+    ('footerSub', 'Flutter · Python · Flask · AI · التحول الرقمي',
+     'Flutter · Python · Flask · AI · Digital Transformation'),
+]
+
+
 def run():
     app = create_app()
     with app.app_context():
         added = {'services': 0, 'projects': 0, 'testimonials': 0, 'blogs': 0,
-                 'skills': 0, 'ai_cards': 0}
+                 'skills': 0, 'ai_cards': 0, 'site_content': 0}
 
         for i, s in enumerate(SERVICES):
             if Service.query.filter_by(title_en=s['title_en']).first():
@@ -354,6 +440,12 @@ def run():
                 desc_ar=c['desc_ar'], desc_en=c['desc_en'],
                 sort_order=i + 1, is_active=True))
             added['ai_cards'] += 1
+
+        for key, ar, en in SITE_CONTENT:
+            if SiteContent.query.filter_by(key=key).first():
+                continue
+            db.session.add(SiteContent(key=key, value_ar=ar, value_en=en))
+            added['site_content'] += 1
 
         db.session.commit()
         print('✓ Seed complete:', added)

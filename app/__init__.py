@@ -65,6 +65,7 @@ def create_app(config_name: str = None) -> Flask:
     from app.api.users import users_bp
     from app.api.skills import skills_bp
     from app.api.ai_cards import ai_cards_bp
+    from app.api.site_content import site_content_bp
 
     app.register_blueprint(auth_bp,         url_prefix='/api/auth')
     app.register_blueprint(projects_bp,     url_prefix='/api/projects')
@@ -77,6 +78,7 @@ def create_app(config_name: str = None) -> Flask:
     app.register_blueprint(users_bp,        url_prefix='/api/users')
     app.register_blueprint(skills_bp,       url_prefix='/api/skills')
     app.register_blueprint(ai_cards_bp,     url_prefix='/api/ai-cards')
+    app.register_blueprint(site_content_bp, url_prefix='/api/site-content')
 
     # ── Frontend routes (language-prefixed) ───────────────────
     from flask import Blueprint, g, redirect, render_template
