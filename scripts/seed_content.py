@@ -14,8 +14,14 @@ Run inside the app container:
     docker exec portfolio_app python scripts/seed_content.py
 """
 import json
+import os
 import re
+import sys
 from datetime import datetime
+
+# Allow running the file directly (`python scripts/seed_content.py`): make sure
+# the project root is on sys.path so the `app` package is importable.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app import create_app, db
 from app.models import Service, Project, Testimonial, BlogPost, Skill, AICard
