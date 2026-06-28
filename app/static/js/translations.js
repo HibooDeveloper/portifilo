@@ -61,14 +61,6 @@ const TRANSLATIONS = {
       'مهندس تطبيقات الجوال'
     ],
 
-    timeline: [
-      { year: '2017–2021', desc: 'درجة هندسة الحاسوب', sub: 'أساسيات أنظمة البرمجيات والهندسة المعمارية', accent: false },
-      { year: '2019', desc: 'بدأ العمل الحر', sub: 'مشاريع ويب وجوال وخلفيات حول العالم', accent: false },
-      { year: '2021', desc: 'تطوير Flutter المحمول', sub: 'تطبيقات متعددة المنصات لـ iOS و Android', accent: false },
-      { year: '2022', desc: 'Python و REST APIs', sub: 'Flask و SQLAlchemy و MySQL للإنتاج', accent: false },
-      { year: '2023–الآن', desc: 'خبير حلول الذكاء الاصطناعي', sub: 'روبوتات AI والأتمتة وهندسة المطالبات والتحول الرقمي', accent: true },
-    ],
-
     skills: [
       { icon: '📱', name: 'Flutter & Dart', pct: 95 },
       { icon: '🐍', name: 'Python', pct: 92 },
@@ -240,14 +232,6 @@ connectivity.onConnectivityChanged.listen((status) {
       'AI Solutions Specialist',
       'Digital Transformation Consultant',
       'Mobile App Engineer'
-    ],
-
-    timeline: [
-      { year: '2017–2021', desc: 'Computer Engineering Degree', sub: 'Foundations in software systems & architecture', accent: false },
-      { year: '2019', desc: 'Started Freelancing', sub: 'Web, mobile, and backend projects worldwide', accent: false },
-      { year: '2021', desc: 'Flutter Mobile Development', sub: 'Cross-platform apps for iOS & Android', accent: false },
-      { year: '2022', desc: 'Python Backend & REST APIs', sub: 'Flask, SQLAlchemy, MySQL production systems', accent: false },
-      { year: '2023–Present', desc: 'AI Solutions Specialist', sub: 'AI chatbots, automation, prompt engineering & digital transformation', accent: true },
     ],
 
     skills: [

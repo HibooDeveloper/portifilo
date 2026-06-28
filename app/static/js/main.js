@@ -280,20 +280,6 @@ function initSkillBars() {
 }
 
 // ─── Render Functions ─────────────────────────────────────────
-function renderTimeline(t) {
-  const el = document.getElementById('timeline');
-  if (!el) return;
-  el.innerHTML = t.timeline.map(item => `
-    <div class="tl-item">
-      <div class="tl-dot" ${item.accent ? 'style="background:var(--cyan)"' : ''}></div>
-      <div>
-        <div class="tl-year">${item.year}</div>
-        <div class="tl-desc">${item.desc}</div>
-        <div class="tl-sub">${item.sub}</div>
-      </div>
-    </div>`).join('');
-}
-
 function skillCard(s, i) {
   const pct = (s.pct != null) ? s.pct : (s.percent || 0);
   return `
@@ -658,7 +644,6 @@ function setLang(lang) {
   setText('aboutTitle', t.aboutTitle, true);
   setText('aboutP1', t.aboutP1);
   setText('aboutP2', t.aboutP2);
-  renderTimeline(t);
 
   // Skills
   setText('skillsLabel', t.skillsLabel);
