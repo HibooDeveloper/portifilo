@@ -364,12 +364,14 @@ function projBadge(t, cat) {
   return f ? f.label : (cat || '');
 }
 
+const PROJ_EMOJI = { mobile: '📱', web: '🌐', backend: '🗄️', ai: '🤖' };
+
 function projThumb(p) {
   if (p.cover_url) {
     const src = String(p.cover_url).replace(/"/g, '&quot;');
     return `<img src="${src}" alt="" loading="lazy" decoding="async">`;
   }
-  return p.emoji || '🚀';
+  return p.emoji || PROJ_EMOJI[p.cat] || '🚀';
 }
 
 function projLink(url, label) {
