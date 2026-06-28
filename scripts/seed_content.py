@@ -18,7 +18,7 @@ import re
 from datetime import datetime
 
 from app import create_app, db
-from app.models import Service, Project, Testimonial, BlogPost
+from app.models import Service, Project, Testimonial, BlogPost, Skill, AICard
 
 
 def slugify(text):
@@ -90,6 +90,42 @@ PROJECTS = [
      'desc_ar': 'خط أنابيب توليد المحتوى التلقائي لوسائل التواصل والمدونات والبريد التسويقي مع جدولة.',
      'desc_en': 'Automated content generation pipeline for social media, blogs, and email marketing with scheduling.',
      'cat': 'ai', 'tech': ['Python', 'GPT-4', 'Flask', 'Celery']},
+]
+
+# ── Skills ─────────────────────────────────────────────────────────────
+SKILLS = [
+    {'icon': '📱', 'name_ar': 'Flutter & Dart', 'name_en': 'Flutter & Dart', 'pct': 95},
+    {'icon': '🐍', 'name_ar': 'Python', 'name_en': 'Python', 'pct': 92},
+    {'icon': '🔥', 'name_ar': 'Firebase', 'name_en': 'Firebase', 'pct': 88},
+    {'icon': '⚗️', 'name_ar': 'Flask', 'name_en': 'Flask', 'pct': 90},
+    {'icon': '🗄️', 'name_ar': 'MySQL', 'name_en': 'MySQL', 'pct': 85},
+    {'icon': '🔌', 'name_ar': 'REST APIs', 'name_en': 'REST APIs', 'pct': 93},
+    {'icon': '🤖', 'name_ar': 'أدوات الذكاء الاصطناعي', 'name_en': 'AI Tools', 'pct': 88},
+    {'icon': '✍️', 'name_ar': 'هندسة المطالبات', 'name_en': 'Prompt Engineering', 'pct': 91},
+    {'icon': '📢', 'name_ar': 'التسويق الرقمي', 'name_en': 'Digital Marketing', 'pct': 80},
+    {'icon': '⚡', 'name_ar': 'تحسين الأداء', 'name_en': 'Performance Opt.', 'pct': 84},
+]
+
+# ── AI Cards ───────────────────────────────────────────────────────────
+AI_CARDS = [
+    {'icon': '🤖', 'title_ar': 'روبوتات المحادثة AI', 'title_en': 'AI Chatbots',
+     'desc_ar': 'أنظمة محادثة ذكية لدعم العملاء وتوليد العملاء المحتملين',
+     'desc_en': 'Intelligent conversational systems for customer support and lead generation'},
+    {'icon': '⚡', 'title_ar': 'أتمتة سير العمل', 'title_en': 'Workflow Automation',
+     'desc_ar': 'أتمتة شاملة للعمليات تلغي المهام اليدوية المتكررة',
+     'desc_en': 'End-to-end process automation eliminating manual, repetitive tasks'},
+    {'icon': '✍️', 'title_ar': 'توليد المحتوى', 'title_en': 'Content Generation',
+     'desc_ar': 'خطوط إنتاج محتوى بالذكاء الاصطناعي للتسويق والتواصل',
+     'desc_en': 'AI-powered content pipelines for marketing and business communication'},
+    {'icon': '🔍', 'title_ar': 'هندسة المطالبات', 'title_en': 'Prompt Engineering',
+     'desc_ar': 'مطالبات دقيقة تستخرج أقصى قيمة من نماذج الذكاء الاصطناعي',
+     'desc_en': 'Precision-tuned prompts that extract maximum value from AI models'},
+    {'icon': '📊', 'title_ar': 'معالجة البيانات', 'title_en': 'Data Processing',
+     'desc_ar': 'خطوط استخراج وتحسين وتحليل البيانات الذكية',
+     'desc_en': 'Intelligent data extraction, enrichment, and analysis pipelines'},
+    {'icon': '🔄', 'title_ar': 'تكامل APIs', 'title_en': 'API Integration',
+     'desc_ar': 'ربط خدمات الذكاء الاصطناعي بسلاسة في أنظمة الأعمال القائمة',
+     'desc_en': 'Seamlessly connecting AI services into existing business systems'},
 ]
 
 # ── Testimonials ───────────────────────────────────────────────────────
@@ -250,7 +286,8 @@ BLOGS = [
 def run():
     app = create_app()
     with app.app_context():
-        added = {'services': 0, 'projects': 0, 'testimonials': 0, 'blogs': 0}
+        added = {'services': 0, 'projects': 0, 'testimonials': 0, 'blogs': 0,
+                 'skills': 0, 'ai_cards': 0}
 
         for i, s in enumerate(SERVICES):
             if Service.query.filter_by(title_en=s['title_en']).first():
@@ -294,6 +331,23 @@ def run():
                 status='published', read_time_min=b['read'],
                 is_featured=(i == 0), published_at=b['published_at']))
             added['blogs'] += 1
+
+        for i, sk in enumerate(SKILLS):
+            if Skill.query.filter_by(name_en=sk['name_en']).first():
+                continue
+            db.session.add(Skill(
+                icon=sk['icon'], name_ar=sk['name_ar'], name_en=sk['name_en'],
+                percent=sk['pct'], sort_order=i + 1, is_active=True))
+            added['skills'] += 1
+
+        for i, c in enumerate(AI_CARDS):
+            if AICard.query.filter_by(title_en=c['title_en']).first():
+                continue
+            db.session.add(AICard(
+                icon=c['icon'], title_ar=c['title_ar'], title_en=c['title_en'],
+                desc_ar=c['desc_ar'], desc_en=c['desc_en'],
+                sort_order=i + 1, is_active=True))
+            added['ai_cards'] += 1
 
         db.session.commit()
         print('✓ Seed complete:', added)

@@ -187,6 +187,64 @@ class Service(db.Model):
         return data
 
 
+# ─── Skill ────────────────────────────────────────────────────
+
+class Skill(db.Model):
+    __tablename__ = 'skills'
+
+    id          = db.Column(db.Integer, primary_key=True)
+    icon        = db.Column(db.String(255))  # emoji OR an uploaded image URL
+    name_ar     = db.Column(db.String(150), nullable=False)
+    name_en     = db.Column(db.String(150), nullable=False)
+    percent     = db.Column(db.Integer, default=80)   # 0-100 proficiency
+    sort_order  = db.Column(db.Integer, default=0)
+    is_active   = db.Column(db.Boolean, default=True)
+    created_at  = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self, lang='en', include_raw=False):
+        data = {
+            'id': self.id, 'icon': self.icon,
+            'name': self.name_ar if lang == 'ar' else self.name_en,
+            'percent': self.percent,
+            'sort_order': self.sort_order, 'is_active': self.is_active,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+        }
+        if include_raw:
+            data.update({'name_ar': self.name_ar, 'name_en': self.name_en})
+        return data
+
+
+# ─── AI Card ──────────────────────────────────────────────────
+
+class AICard(db.Model):
+    __tablename__ = 'ai_cards'
+
+    id          = db.Column(db.Integer, primary_key=True)
+    icon        = db.Column(db.String(255))  # emoji OR an uploaded image URL
+    title_ar    = db.Column(db.String(200), nullable=False)
+    title_en    = db.Column(db.String(200), nullable=False)
+    desc_ar     = db.Column(db.Text)
+    desc_en     = db.Column(db.Text)
+    sort_order  = db.Column(db.Integer, default=0)
+    is_active   = db.Column(db.Boolean, default=True)
+    created_at  = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self, lang='en', include_raw=False):
+        data = {
+            'id': self.id, 'icon': self.icon,
+            'title': self.title_ar if lang == 'ar' else self.title_en,
+            'description': self.desc_ar if lang == 'ar' else self.desc_en,
+            'sort_order': self.sort_order, 'is_active': self.is_active,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+        }
+        if include_raw:
+            data.update({
+                'title_ar': self.title_ar, 'title_en': self.title_en,
+                'desc_ar': self.desc_ar, 'desc_en': self.desc_en,
+            })
+        return data
+
+
 # ─── Blog Post ────────────────────────────────────────────────
 
 class BlogPost(db.Model):

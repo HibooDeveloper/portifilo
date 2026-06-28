@@ -294,18 +294,38 @@ function renderTimeline(t) {
     </div>`).join('');
 }
 
-function renderSkills(t) {
+function skillCard(s, i) {
+  const pct = (s.pct != null) ? s.pct : (s.percent || 0);
+  return `
+    <div class="skill-card reveal" style="transition-delay:${i * 0.06}s">
+      <div class="skill-icon">${svcIconHtml(s.icon)}</div>
+      <div class="skill-name">${s.name || ''}</div>
+      <div class="skill-bar-wrap">
+        <div class="skill-bar" data-pct="${pct}" style="width:0%"></div>
+      </div>
+      <div class="skill-pct">${pct}%</div>
+    </div>`;
+}
+
+async function renderSkills(t) {
   const el = document.getElementById('skillsGrid');
   if (!el) return;
-  el.innerHTML = t.skills.map((s, i) => `
-    <div class="skill-card reveal" style="transition-delay:${i * 0.06}s">
-      <div class="skill-icon">${s.icon}</div>
-      <div class="skill-name">${s.name}</div>
-      <div class="skill-bar-wrap">
-        <div class="skill-bar" data-pct="${s.pct}" style="width:0%"></div>
-      </div>
-      <div class="skill-pct">${s.pct}%</div>
-    </div>`).join('');
+  // Live skills from the admin DB; static list is the offline fallback.
+  const lang = currentLang;
+  let list = null;
+  try {
+    const res = await fetch(`/api/skills/?lang=${lang}&per_page=100`);
+    if (res.ok) {
+      const data = await res.json();
+      const items = (data && data.items) || [];
+      if (currentLang !== lang) return; // language switched mid-fetch
+      if (items.length) list = items.map(s => ({ icon: s.icon, name: s.name, pct: s.percent }));
+    }
+  } catch (e) { /* fall through to static */ }
+  if (!list) list = t.skills;
+  el.innerHTML = list.map((s, i) => skillCard(s, i)).join('');
+  observe();
+  initSkillBars();
 }
 
 // An icon value can be a short emoji or an uploaded image URL/path. Render an
@@ -456,15 +476,32 @@ function filterProjects(val, btn) {
   renderProjects(val);
 }
 
-function renderAICards(t) {
+function aiCardHtml(c) {
+  return `
+    <div class="ai-card">
+      <div class="ai-card-icon">${svcIconHtml(c.icon)}</div>
+      <div class="ai-card-name">${c.name || ''}</div>
+      <div class="ai-card-desc">${c.desc || ''}</div>
+    </div>`;
+}
+
+async function renderAICards(t) {
   const el = document.getElementById('aiCards');
   if (!el) return;
-  el.innerHTML = t.aiCards.map(c => `
-    <div class="ai-card">
-      <div class="ai-card-icon">${c.icon}</div>
-      <div class="ai-card-name">${c.name}</div>
-      <div class="ai-card-desc">${c.desc}</div>
-    </div>`).join('');
+  // Live AI cards from the admin DB; static list is the offline fallback.
+  const lang = currentLang;
+  let list = null;
+  try {
+    const res = await fetch(`/api/ai-cards/?lang=${lang}&per_page=100`);
+    if (res.ok) {
+      const data = await res.json();
+      const items = (data && data.items) || [];
+      if (currentLang !== lang) return; // language switched mid-fetch
+      if (items.length) list = items.map(c => ({ icon: c.icon, name: c.title, desc: c.description }));
+    }
+  } catch (e) { /* fall through to static */ }
+  if (!list) list = t.aiCards;
+  el.innerHTML = list.map(c => aiCardHtml(c)).join('');
 }
 
 function testiAvatar(item) {
