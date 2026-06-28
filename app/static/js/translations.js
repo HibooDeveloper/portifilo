@@ -1,6 +1,6 @@
 ﻿// ============================================================
 // translations.js — Bilingual AR/EN content for portfolio
-// Abubaker Hobeldeen Suliman — Portfolio
+// Abubaker HobEldeen — Portfolio
 // ============================================================
 
 const TRANSLATIONS = {
@@ -220,7 +220,7 @@ connectivity.onConnectivityChanged.listen((status) {
     iPhone: '+1 234 567 8900', iMsg: 'Tell me about your project...',
     submitBtn: 'Send Message →', submitDone: '✓ Message Sent!',
     submitSending: 'Sending…', submitError: '✕ Could not send, try again', submitRequired: 'Please fill all required fields',
-    footerMain: '© 2025 <span>Abubaker Hobeldeen Suliman</span> · Software Engineer & AI Solutions Specialist · Cairo, Egypt',
+    footerMain: '© 2025 <span>Abubaker HobEldeen</span> · Software Engineer & AI Solutions Specialist · Cairo, Egypt',
     footerSub: 'Flutter · Python · Flask · AI · Digital Transformation',
     readMore: 'Read More →',
     blogBack: 'Back to articles', blogLoading: 'Loading article…',

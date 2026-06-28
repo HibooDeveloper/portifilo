@@ -1,6 +1,6 @@
 // ============================================================
 // main.js — Portfolio interactivity & bilingual engine
-// Abubaker Hobeldeen Suliman — Portfolio
+// Abubaker HobEldeen — Portfolio
 // ============================================================
 
 'use strict';
@@ -827,7 +827,7 @@ function showHome() {
   document.body.classList.remove('viewing-post');
   document.title = currentLang === 'ar'
     ? 'أبوبكر حب الدين — مهندس برمجيات وخبير حلول ذكاء اصطناعي'
-    : 'Abubaker Hobeldeen — Software Engineer & AI Solutions Specialist';
+    : 'Abubaker HobEldeen — Software Engineer & AI Solutions Specialist';
 }
 
 function setBackLabel() {
