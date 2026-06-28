@@ -384,6 +384,11 @@ SITE_CONTENT = [
 def run():
     app = create_app()
     with app.app_context():
+        # Make sure newly added tables (skills, ai_cards, site_content, …) exist
+        # before seeding. create_all only creates missing tables — it never
+        # touches or drops existing data.
+        db.create_all()
+
         added = {'services': 0, 'projects': 0, 'testimonials': 0, 'blogs': 0,
                  'skills': 0, 'ai_cards': 0, 'site_content': 0}
 
