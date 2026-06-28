@@ -361,6 +361,8 @@ body.ltr .submit-btn{font-family:var(--font-en)}
 /* ===== FOOTER ===== */
 footer{background:var(--dark);padding:1.75rem 2rem;text-align:center;color:#334155;font-size:.8rem;border-top:1px solid rgba(255,255,255,.04)}
 footer span{color:var(--blue)}
+.footer-credit{margin-top:.6rem;display:flex;align-items:center;justify-content:center;gap:.4rem;font-size:.72rem;color:#475569}
+.footer-credit-logo{width:18px;height:18px;object-fit:contain;vertical-align:middle}
 
 /* ===== SCROLL REVEAL ===== */
 .reveal{opacity:0;transform:translateY(22px);transition:opacity .6s cubic-bezier(.4,0,.2,1),transform .6s cubic-bezier(.4,0,.2,1)}
@@ -773,9 +775,13 @@ body.rtl .annot.a3{left:-1.6rem}
 <footer>
   <p id="footerMain">© 2025 <span>أبوبكر هبل الدين سليمان</span> · مهندس برمجيات وخبير حلول الذكاء الاصطناعي · القاهرة، مصر</p>
   <p style="margin-top:.35rem;font-size:.72rem" id="footerSub">Flutter · Python · Flask · AI · التحول الرقمي</p>
+  <div class="footer-credit">
+    <span data-ar="تم التصميم بواسطة حبو" data-en="Designed by Hibbo">تم التصميم بواسطة حبو</span>
+    <img src="/static/images/logo.png" alt="hibbo.tech" class="footer-credit-logo">
+  </div>
 </footer>
 
 <script src="/static/js/translations.js"></script>
-<script src="/static/js/main.js?v=9"></script>
+<script src="/static/js/main.js?v=10"></script>
 </body>
 </html>
