@@ -826,7 +826,7 @@ function closePost() {
 function showHome() {
   document.body.classList.remove('viewing-post');
   document.title = currentLang === 'ar'
-    ? 'أبوبكر هبل الدين — مهندس برمجيات وخبير حلول ذكاء اصطناعي'
+    ? 'أبوبكر حب الدين — مهندس برمجيات وخبير حلول ذكاء اصطناعي'
     : 'Abubaker Hobeldeen — Software Engineer & AI Solutions Specialist';
 }
 

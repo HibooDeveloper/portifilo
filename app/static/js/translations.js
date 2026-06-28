@@ -47,7 +47,7 @@ const TRANSLATIONS = {
     iPhone: '+20 1XX XXX XXXX', iMsg: 'أخبرني عن مشروعك...',
     submitBtn: 'إرسال الرسالة ←', submitDone: '✓ تم إرسال رسالتك!',
     submitSending: 'جارٍ الإرسال…', submitError: '✕ تعذّر الإرسال، حاول مجدداً', submitRequired: 'يرجى ملء جميع الحقول المطلوبة',
-    footerMain: '© 2025 <span>أبوبكر هبل الدين سليمان</span> · مهندس برمجيات وخبير حلول الذكاء الاصطناعي · القاهرة، مصر',
+    footerMain: '© 2025 <span>أبوبكر حب الدين</span> · مهندس برمجيات وخبير حلول الذكاء الاصطناعي · القاهرة، مصر',
     footerSub: 'Flutter · Python · Flask · AI · التحول الرقمي',
     readMore: 'اقرأ المزيد ←',
     blogBack: 'العودة إلى المقالات', blogLoading: 'جارٍ تحميل المقال…',
