@@ -690,6 +690,14 @@ function setLang(lang) {
   setText('contactSub', t.contactSub);
   setText('cEmail', t.cEmail); setText('cWA', t.cWA);
   setText('cLoc', t.cLoc); setText('cLocVal', t.cLocVal);
+  // Contact details — values + their links (editable from Site Content).
+  if (t.cEmailVal) { setText('cEmailVal', t.cEmailVal); setHref('cEmailLink', 'mailto:' + t.cEmailVal); }
+  if (t.cWAVal) setText('cWAVal', t.cWAVal);
+  if (t.cWALink) setHref('cWALink', t.cWALink);
+  if (t.cLinkedinVal) setText('cLinkedinVal', t.cLinkedinVal);
+  if (t.cLinkedinLink) setHref('cLinkedinLink', t.cLinkedinLink);
+  if (t.cGithubVal) setText('cGithubVal', t.cGithubVal);
+  if (t.cGithubLink) setHref('cGithubLink', t.cGithubLink);
   setText('formTitle', t.formTitle);
   setText('lName', t.lName); setText('lEmail', t.lEmail);
   setText('lPhone', t.lPhone); setText('lMsg', t.lMsg);
@@ -902,6 +910,11 @@ function setText(id, value, html = false) {
   if (!el) return;
   if (html) el.innerHTML = value;
   else el.textContent = value;
+}
+
+function setHref(id, url) {
+  const el = document.getElementById(id);
+  if (el && url) el.setAttribute('href', url);
 }
 
 function setPlaceholder(id, value) {
