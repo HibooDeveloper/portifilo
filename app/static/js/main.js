@@ -327,13 +327,17 @@ function svcIconHtml(icon) {
   return v;
 }
 
-function svcCard(icon, name, desc, tags, i) {
+// Normalized list of the currently rendered services, used by the details modal.
+let servicesData = [];
+
+function svcCard(s, i) {
   return `
-    <div class="svc-card reveal" style="transition-delay:${i * 0.07}s">
-      <div class="svc-icon">${svcIconHtml(icon)}</div>
-      <div class="svc-name">${name || ''}</div>
-      <div class="svc-desc">${desc || ''}</div>
-      <div class="svc-tags">${(tags || []).map(tag => `<span class="s-tag">${tag}</span>`).join('')}</div>
+    <div class="svc-card reveal" style="transition-delay:${i * 0.07}s" role="button" tabindex="0"
+         onclick="openService(${i})" onkeydown="if(event.key==='Enter')openService(${i})">
+      <div class="svc-icon">${svcIconHtml(s.icon)}</div>
+      <div class="svc-name">${s.title || ''}</div>
+      <div class="svc-desc">${s.desc || ''}</div>
+      <div class="svc-tags">${(s.tags || []).map(tag => `<span class="s-tag">${tag}</span>`).join('')}</div>
     </div>`;
 }
 
@@ -343,23 +347,99 @@ async function renderServices(t) {
   // Render the live list from the admin-managed database. Fall back to the
   // bundled static list only if the API is unreachable.
   const lang = currentLang;
+  let list = null;
   try {
     const res = await fetch(`/api/services/?lang=${lang}&per_page=100`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    const items = (data && data.items) || [];
-    // Ignore a stale response if the user switched language mid-fetch.
-    if (currentLang !== lang) return;
-    if (items.length) {
-      el.innerHTML = items.map((s, i) => svcCard(s.icon, s.title, s.description, s.tags, i)).join('');
-      observe();
-      return;
+    if (res.ok) {
+      const data = await res.json();
+      const items = (data && data.items) || [];
+      if (currentLang !== lang) return; // language switched mid-fetch
+      if (items.length) {
+        list = items.map(s => ({ icon: s.icon, title: s.title, desc: s.description, tags: s.tags || [] }));
+      }
     }
-  } catch (e) {
-    // Network/API failure — fall through to the static list below.
+  } catch (e) { /* fall through to static */ }
+  if (!list) {
+    list = t.services.map(s => ({ icon: s.icon, title: s.name, desc: s.desc, tags: s.tags || [] }));
   }
-  el.innerHTML = t.services.map((s, i) => svcCard(s.icon, s.name, s.desc, s.tags, i)).join('');
+  servicesData = list;
+  el.innerHTML = list.map((s, i) => svcCard(s, i)).join('');
+  observe();
 }
+
+// ─── Service details modal + "Request this service" CTA ───────
+function openService(i) {
+  const s = servicesData[i];
+  if (!s) return;
+  let modal = document.getElementById('svcModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'svcModal';
+    modal.className = 'svc-modal';
+    modal.addEventListener('click', e => { if (e.target === modal) closeServiceModal(); });
+    document.body.appendChild(modal);
+  }
+  const ar = currentLang === 'ar';
+  const reqLabel = ar ? 'اطلب هذه الخدمة' : 'Request this service';
+  const waLabel = ar ? 'اطلب عبر واتساب' : 'Request via WhatsApp';
+  const arrow = ar ? '←' : '→';
+  const tagsHtml = (s.tags || []).map(tag => `<span class="s-tag">${tag}</span>`).join('');
+  modal.innerHTML = `
+    <div class="svc-modal-card" role="dialog" aria-modal="true">
+      <button class="svc-modal-close" onclick="closeServiceModal()" aria-label="Close">&times;</button>
+      <div class="svc-modal-icon">${svcIconHtml(s.icon)}</div>
+      <h3 class="svc-modal-title">${s.title || ''}</h3>
+      <p class="svc-modal-desc">${s.desc || ''}</p>
+      ${tagsHtml ? `<div class="svc-tags svc-modal-tags">${tagsHtml}</div>` : ''}
+      <div class="svc-modal-actions">
+        <button class="svc-req-btn" onclick="requestService(${i})">${reqLabel} ${arrow}</button>
+        <button class="svc-wa-btn" onclick="requestServiceWA(${i})">${waLabel} 💬</button>
+      </div>
+    </div>`;
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeServiceModal() {
+  const modal = document.getElementById('svcModal');
+  if (modal) modal.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// Pre-fill the contact form with the chosen service and scroll to it — this
+// turns the visitor into a real service request in the admin inbox on submit.
+function requestService(i) {
+  const s = servicesData[i];
+  if (!s) return;
+  const ar = currentLang === 'ar';
+  const msg = document.getElementById('iMsg');
+  if (msg) {
+    msg.value = (ar ? `أرغب في طلب خدمة: ${s.title}` : `I'd like to request: ${s.title}`) + '\n\n';
+  }
+  closeServiceModal();
+  document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+  setTimeout(() => document.getElementById('iName')?.focus(), 600);
+}
+
+// Open WhatsApp with a prefilled request; if no WhatsApp link is configured,
+// fall back to the on-site contact form.
+function requestServiceWA(i) {
+  const s = servicesData[i];
+  if (!s) return;
+  const link = ((TRANSLATIONS[currentLang] || {}).cWALink || '').trim();
+  const ar = currentLang === 'ar';
+  const text = encodeURIComponent(ar ? `مرحبًا، أرغب في طلب خدمة: ${s.title}` : `Hello, I'd like to request: ${s.title}`);
+  if (link.startsWith('http')) {
+    window.open(link + (link.includes('?') ? '&' : '?') + 'text=' + text, '_blank', 'noopener');
+    closeServiceModal();
+  } else {
+    requestService(i);
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeServiceModal();
+});
 
 // Live projects are cached per language so filter clicks don't refetch.
 let projectsCache = null;
